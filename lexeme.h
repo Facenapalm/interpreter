@@ -6,11 +6,15 @@
 #include <vector>
 
 enum LexemeType {
+    ltNone,
     // keywords and types
     ltProgram,
     ltIf,
     ltElse,
     ltWhile,
+    ltDo,
+    ltBreak,
+    ltContinue,
     ltRead,
     ltWrite,
     ltInt,
@@ -55,6 +59,8 @@ enum LexemeType {
     // labels
     ltKeywordsStart = ltProgram,
     ltKeywordsEnd = ltReal,
+    ltTypesStart = ltInt,
+    ltTypesEnd = ltReal,
     ltConstantsStart = ltConstInt,
     ltConstantsEnd = ltConstReal,
     ltSeparatorsStart = ltComma,
@@ -62,7 +68,9 @@ enum LexemeType {
     ltUnaryOperationsStart = ltNot,
     ltUnaryOperationsEnd = ltMinusUn,
     ltBinaryOperationsStart = ltMul,
-    ltBinaryOperationsEnd = ltOr
+    ltBinaryOperationsEnd = ltOr,
+    ltComparersStart = ltSm,
+    ltComparersEnd = ltNotEq,
 };
 
 class Lexeme {

@@ -26,6 +26,8 @@
 		<Unit filename="lexeme.h" />
 		<Unit filename="lexical.cpp" />
 		<Unit filename="lexical.h" />
+		<Unit filename="syntax.cpp" />
+		<Unit filename="syntax.h" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

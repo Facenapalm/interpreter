@@ -6,6 +6,7 @@
 LexicalAnalyzer::LexicalAnalyzer()
 {
     buff.reserve(256);
+    state = asError;
 }
 
 void LexicalAnalyzer::get_next_char()
@@ -68,12 +69,12 @@ void LexicalAnalyzer::transition_push_eps(AnalyzerState new_state, LexemeType ty
     state = new_state;
 }
 
-void LexicalAnalyzer::throw_exception(const std::string &message)
+void LexicalAnalyzer::transition_error(const std::string &message)
 {
-    transition_eps(asError);
+    state = asError;
     std::stringstream stream;
     stream << "Lexical error: " << message <<
-        " (line " << line << ", column " << column << ").";
+        " (line " << line << ", column " << column << ")";
     throw std::runtime_error(stream.str());
 }
 
@@ -124,6 +125,12 @@ static inline LexemeType get_keyword_type(const std::string &str)
         return ltRead;
     } else if (str == "write") {
         return ltWrite;
+    } else if (str == "do") {
+        return ltDo;
+    } else if (str == "break") {
+        return ltBreak;
+    } else if (str == "continue") {
+        return ltContinue;
     } else if (str == "int") {
         return ltInt;
     } else if (str == "string") {
@@ -177,7 +184,7 @@ void LexicalAnalyzer::process()
                        cur_char == '<' || cur_char == '>') {
                 transition_buff(asReadComparison);
             } else {
-                throw_exception(std::string() +
+                transition_error(std::string() +
                     "unexpected symbol '" + cur_char + "'");
             }
             break;
@@ -215,7 +222,7 @@ void LexicalAnalyzer::process()
             } else if (cur_char == '.') {
                 transition_buff(asReadDot);
             } else if (is_letter(cur_char)) {
-                throw_exception(std::string() +
+                transition_error(std::string() +
                     "unexpected symbol '" + cur_char + "' after number");
             } else {
                 transition_push_eps(asAfterOperand, ltConstInt);
@@ -225,7 +232,7 @@ void LexicalAnalyzer::process()
             if (is_digit(cur_char)) {
                 transition_buff(asReadReal);
             } else {
-                throw_exception(std::string() +
+                transition_error(std::string() +
                     "expected fractional part of number, got '" + cur_char + "'");
             }
             break;
@@ -233,7 +240,7 @@ void LexicalAnalyzer::process()
             if (is_digit(cur_char)) {
                 transition_buff(asReadReal);
             } else if (is_letter(cur_char) || cur_char == '.') {
-                throw_exception(std::string() +
+                transition_error(std::string() +
                     "unexpected symbol '" + cur_char + "' after number");
             } else {
                 transition_push_eps(asAfterOperand, ltConstReal);
@@ -267,7 +274,7 @@ void LexicalAnalyzer::process()
                     transition_push_eps(asStart, ltGr);
                     break;
                 case '!':
-                    throw_exception("unexpected symbol '!'");
+                    transition_error("unexpected symbol '!'");
                 }
             }
             break;
@@ -278,7 +285,7 @@ void LexicalAnalyzer::process()
                 push_lexeme(ltConstString);
                 transition(asAfterOperand);
             } else if (cur_char == '\0' || cur_char == '\n') {
-                throw_exception("unclosed string");
+                transition_error("unclosed string");
             } else {
                 transition_buff(asReadString);
             }
@@ -288,7 +295,7 @@ void LexicalAnalyzer::process()
                 buff += '\n';
                 transition(asReadString);
             } else if (cur_char == '\0') {
-                throw_exception("unclosed string");
+                transition_error("unclosed string");
             } else {
                 transition_buff(asReadString);
             }
@@ -305,7 +312,7 @@ void LexicalAnalyzer::process()
         case asReadComment:
         case asReadCommentAO:
             if (cur_char == '\0') {
-                throw_exception("unclosed comment");
+                transition_error("unclosed comment");
             } else if (cur_char == '*') {
                 transition(state == asReadComment ? asReadCommentEnd : asReadCommentEndAO);
             } else {
@@ -346,7 +353,7 @@ void LexicalAnalyzer::parse_string(const std::string &str)
 
 const LexemeArray &LexicalAnalyzer::get_lexemes() const
 {
-    if (state == asError) {
+    if (state != asDone) {
         throw std::runtime_error("Attempt to get lexems from analyzer in error state.");
     }
     return result;

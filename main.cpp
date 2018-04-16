@@ -1,11 +1,13 @@
 #include <iostream>
 #include "lexeme.h"
 #include "lexical.h"
+#include "syntax.h"
 
 int main()
 {
     std::string str, cur_str;
-    LexicalAnalyzer tester;
+    LexicalAnalyzer lexical;
+    SyntaxAnalyzer syntax;
     LexemeArray result;
     while (true) {
         str = "";
@@ -13,18 +15,15 @@ int main()
             std::getline(std::cin, cur_str);
             str += cur_str + "\n";
         } while (cur_str != "");
-        std::cout << "-----" << std::endl;
         try {
-            tester.parse_string(str);
-            result = tester.get_lexemes();
-            for (size_t i = 0; i < result.size(); i++) {
-                result[i].print(std::cout);
-                std::cout << std::endl;
-            }
+            lexical.parse_string(str);
+            result = lexical.get_lexemes();
+            syntax.parse_array(result);
+            std::cout << "ok" << std::endl;
         } catch (const std::exception &e) {
             std::cout << e.what() << std::endl;
         }
-        std::cout << "-----" << std::endl;
+        std::cout << std::endl;
     }
     return 0;
 }

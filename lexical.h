@@ -50,8 +50,7 @@ private:
     void transition_push(AnalyzerState new_state, LexemeType type);
     void transition_eps(AnalyzerState new_state);
     void transition_push_eps(AnalyzerState new_state, LexemeType type);
-
-    void throw_exception(const std::string &message);
+    void transition_error(const std::string &message);
 
     void process();
 public:
