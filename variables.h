@@ -21,6 +21,7 @@ public:
     bool register_name(std::string name, ValueType type);
     VariableID get_number(std::string name) const;
     ValueType get_type(VariableID number) const;
+    VariableID size() const;
 };
 
 #endif // VARIABLES_H

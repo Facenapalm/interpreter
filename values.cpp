@@ -10,6 +10,12 @@ ValueType Value::get_type() const
 
 IntegerValue::IntegerValue(Integer value): value(value) {}
 
+IntegerValue::IntegerValue(const String &str)
+{
+    StringValue temp(str);
+    value = temp.to_integer();
+}
+
 Integer IntegerValue::to_integer() const
 {
     return value;
@@ -56,6 +62,12 @@ Real StringValue::to_real() const
 
 BooleanValue::BooleanValue(Boolean value): value(value) {}
 
+BooleanValue::BooleanValue(const String &str)
+{
+    StringValue temp(str);
+    value = temp.to_boolean();
+}
+
 Integer BooleanValue::to_integer() const
 {
     if (value) {
@@ -89,6 +101,12 @@ Real BooleanValue::to_real() const
 }
 
 RealValue::RealValue(Real value): value(value) {}
+
+RealValue::RealValue(const String &str)
+{
+    StringValue temp(str);
+    value = temp.to_real();
+}
 
 Integer RealValue::to_integer() const
 {

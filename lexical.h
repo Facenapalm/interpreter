@@ -8,28 +8,10 @@
 
 class LexicalAnalyzer {
 private:
-    enum AnalyzerState {
-        asStart,
-        asAfterOperand,
-        asReadIdentificator,
-        asReadSign,
-        asReadInt,
-        asReadDot,
-        asReadReal,
-        asReadComparison,
-        asReadString,
-        asReadStringEscape,
-        asReadCommentStart,
-        asReadCommentStartAO,
-        asReadComment,
-        asReadCommentAO,
-        asReadCommentEnd,
-        asReadCommentEndAO,
-        asDone,
-        asError
-    };
+    typedef void (LexicalAnalyzer::*AnalyzerState)();
 
     LexemeArray result;
+    bool done;
 
     AnalyzerState state;
     std::string buff;
@@ -51,6 +33,23 @@ private:
     void transition_eps(AnalyzerState new_state);
     void transition_push_eps(AnalyzerState new_state, LexemeType type);
     void transition_error(const std::string &message);
+
+    void state_start();
+    void state_after_operand();
+    void state_read_identificator();
+    void state_read_sign();
+    void state_read_int();
+    void state_read_dot();
+    void state_read_real();
+    void state_read_comparison();
+    void state_read_string();
+    void state_read_string_escape();
+    void state_read_comment_start();
+    void state_read_comment_start_AO();
+    void state_read_comment();
+    void state_read_comment_AO();
+    void state_read_comment_end();
+    void state_read_comment_end_AO();
 
     void process();
 public:

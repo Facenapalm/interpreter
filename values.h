@@ -32,6 +32,7 @@ private:
     Integer value;
 public:
     IntegerValue(Integer value);
+    IntegerValue(const String &str);
     Integer to_integer() const override;
     String to_string() const override;
     Boolean to_boolean() const override;
@@ -54,6 +55,7 @@ private:
     Boolean value;
 public:
     BooleanValue(Boolean value);
+    BooleanValue(const String &str);
     Integer to_integer() const override;
     String to_string() const override;
     Boolean to_boolean() const override;
@@ -65,6 +67,7 @@ private:
     Real value;
 public:
     RealValue(Real value);
+    RealValue(const String &str);
     Integer to_integer() const override;
     String to_string() const override;
     Boolean to_boolean() const override;

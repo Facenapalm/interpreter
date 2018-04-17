@@ -1,4 +1,4 @@
-#include <sstream>
+#include <sstrea8m>
 #include <stdexcept>
 
 #include "lexical.h"
@@ -6,7 +6,7 @@
 LexicalAnalyzer::LexicalAnalyzer()
 {
     buff.reserve(256);
-    state = asError;
+    done = false;
 }
 
 void LexicalAnalyzer::get_next_char()
@@ -71,7 +71,6 @@ void LexicalAnalyzer::transition_push_eps(AnalyzerState new_state, LexemeType ty
 
 void LexicalAnalyzer::transition_error(const std::string &message)
 {
-    state = asError;
     std::stringstream stream;
     stream << "Lexical error: " << message <<
         " (line " << line << ", column " << column << ")";
@@ -152,196 +151,252 @@ static inline LexemeType get_keyword_type(const std::string &str)
     }
 }
 
-void LexicalAnalyzer::process()
+void LexicalAnalyzer::state_start()
 {
-    while (state != asDone) {
-        switch (state) {
-        case asStart:
-            if (cur_char == '\0') {
-                transition_eps(asDone);
-            } else if (is_space(cur_char)) {
-                transition(asStart);
-            } else if (is_digit(cur_char)) {
-                transition_buff(asReadInt);
-            } else if (is_letter(cur_char)) {
-                transition_buff(asReadIdentificator);
-            } else if (cur_char == '"') {
-                transition(asReadString);
-            } else if (cur_char == '{' || cur_char == '}' || cur_char == '(' ||
-                       cur_char == ',' || cur_char == ';') {
-                transition_push(asStart, get_separator_type(cur_char));
-            } else if (cur_char == ')') {
-                transition_push(asAfterOperand, ltBracketClose);
-            } else if (cur_char == '+' || cur_char == '-') {
-                transition_buff(asReadSign);
-            } else if (cur_char == '*') {
-                transition_push(asStart, ltMul);
-            } else if (cur_char == '%') {
-                transition_push(asStart, ltMod);
-            } else if (cur_char == '/') {
-                transition_buff(asReadCommentStart);
-            } else if (cur_char == '=' || cur_char == '!' ||
-                       cur_char == '<' || cur_char == '>') {
-                transition_buff(asReadComparison);
-            } else {
-                transition_error(std::string() +
-                    "unexpected symbol '" + cur_char + "'");
-            }
+    if (cur_char == '\0') {
+        transition_eps(NULL);
+    } else if (is_space(cur_char)) {
+        transition(&LexicalAnalyzer::state_start);
+    } else if (is_digit(cur_char)) {
+        transition_buff(&LexicalAnalyzer::state_read_int);
+    } else if (is_letter(cur_char)) {
+        transition_buff(&LexicalAnalyzer::state_read_identificator);
+    } else if (cur_char == '"') {
+        transition(&LexicalAnalyzer::state_read_string);
+    } else if (cur_char == '{' || cur_char == '}' || cur_char == '(' ||
+               cur_char == ',' || cur_char == ';') {
+        transition_push(&LexicalAnalyzer::state_start, get_separator_type(cur_char));
+    } else if (cur_char == ')') {
+        transition_push(&LexicalAnalyzer::state_after_operand, ltBracketClose);
+    } else if (cur_char == '+' || cur_char == '-') {
+        transition_buff(&LexicalAnalyzer::state_read_sign);
+    } else if (cur_char == '*') {
+        transition_push(&LexicalAnalyzer::state_start, ltMul);
+    } else if (cur_char == '%') {
+        transition_push(&LexicalAnalyzer::state_start, ltMod);
+    } else if (cur_char == '/') {
+        transition_buff(&LexicalAnalyzer::state_read_comment_start);
+    } else if (cur_char == '=' || cur_char == '!' ||
+               cur_char == '<' || cur_char == '>') {
+        transition_buff(&LexicalAnalyzer::state_read_comparison);
+    } else {
+        transition_error(std::string() +
+            "unexpected symbol '" + cur_char + "'");
+    }
+}
+
+void LexicalAnalyzer::state_after_operand()
+{
+    if (is_space(cur_char)) {
+        transition(&LexicalAnalyzer::state_after_operand);
+    } else if (cur_char == '+') {
+        transition_push(&LexicalAnalyzer::state_start, ltPlus);
+    } else if (cur_char == '-') {
+        transition_push(&LexicalAnalyzer::state_start, ltMinus);
+    } else if (cur_char == '/') {
+        transition_buff(&LexicalAnalyzer::state_read_comment_start_AO);
+    } else {
+        transition_eps(&LexicalAnalyzer::state_start);
+    }
+}
+
+void LexicalAnalyzer::state_read_identificator()
+{
+    if (is_letter(cur_char) || is_digit(cur_char)) {
+        transition_buff(&LexicalAnalyzer::state_read_identificator);
+    } else {
+        LexemeType type = get_keyword_type(buff);
+        transition_push_eps(type == ltIdentificator ?
+                            &LexicalAnalyzer::state_after_operand :
+                            &LexicalAnalyzer::state_start, type);
+    }
+}
+
+void LexicalAnalyzer::state_read_sign()
+{
+    if (is_digit(cur_char)) {
+        transition_buff(&LexicalAnalyzer::state_read_int);
+    } else {
+        transition_push_eps(&LexicalAnalyzer::state_start, buff == "+" ? ltPlusUn : ltMinusUn);
+    }
+}
+
+void LexicalAnalyzer::state_read_int()
+{
+    if (is_digit(cur_char)) {
+        transition_buff(&LexicalAnalyzer::state_read_int);
+    } else if (cur_char == '.') {
+        transition_buff(&LexicalAnalyzer::state_read_dot);
+    } else if (is_letter(cur_char)) {
+        transition_error(std::string() +
+            "unexpected symbol '" + cur_char + "' after number");
+    } else {
+        transition_push_eps(&LexicalAnalyzer::state_after_operand, ltConstInt);
+    }
+}
+
+void LexicalAnalyzer::state_read_dot()
+{
+    if (is_digit(cur_char)) {
+        transition_buff(&LexicalAnalyzer::state_read_real);
+    } else {
+        transition_error(std::string() +
+            "expected fractional part of number, got '" + cur_char + "'");
+    }
+}
+
+void LexicalAnalyzer::state_read_real()
+{
+    if (is_digit(cur_char)) {
+        transition_buff(&LexicalAnalyzer::state_read_real);
+    } else if (is_letter(cur_char) || cur_char == '.') {
+        transition_error(std::string() +
+            "unexpected symbol '" + cur_char + "' after number");
+    } else {
+        transition_push_eps(&LexicalAnalyzer::state_after_operand, ltConstReal);
+    }
+}
+
+void LexicalAnalyzer::state_read_comparison()
+{
+    if (cur_char == '=') {
+        switch (buff[0]) {
+        case '=':
+            transition_push(&LexicalAnalyzer::state_start, ltEq);
             break;
-        case asAfterOperand:
-            if (is_space(cur_char)) {
-                transition(asAfterOperand);
-            } else if (cur_char == '+') {
-                transition_push(asStart, ltPlus);
-            } else if (cur_char == '-') {
-                transition_push(asStart, ltMinus);
-            } else if (cur_char == '/') {
-                transition_buff(asReadCommentStartAO);
-            } else {
-                transition_eps(asStart);
-            }
+        case '<':
+            transition_push(&LexicalAnalyzer::state_start, ltSmEq);
             break;
-        case asReadIdentificator:
-            if (is_letter(cur_char) || is_digit(cur_char)) {
-                transition_buff(asReadIdentificator);
-            } else {
-                LexemeType type = get_keyword_type(buff);
-                transition_push_eps(type == ltIdentificator ? asAfterOperand : asStart, type);
-            }
+        case '>':
+            transition_push(&LexicalAnalyzer::state_start, ltGrEq);
             break;
-        case asReadSign:
-            if (is_digit(cur_char)) {
-                transition_buff(asReadInt);
-            } else {
-                transition_push_eps(asStart, buff == "+" ? ltPlusUn : ltMinusUn);
-            }
+        case '!':
+            transition_push(&LexicalAnalyzer::state_start, ltNotEq);
             break;
-        case asReadInt:
-            if (is_digit(cur_char)) {
-                transition_buff(asReadInt);
-            } else if (cur_char == '.') {
-                transition_buff(asReadDot);
-            } else if (is_letter(cur_char)) {
-                transition_error(std::string() +
-                    "unexpected symbol '" + cur_char + "' after number");
-            } else {
-                transition_push_eps(asAfterOperand, ltConstInt);
-            }
+        }
+    } else {
+        switch (buff[0]) {
+        case '=':
+            transition_push_eps(&LexicalAnalyzer::state_start, ltAssign);
             break;
-        case asReadDot:
-            if (is_digit(cur_char)) {
-                transition_buff(asReadReal);
-            } else {
-                transition_error(std::string() +
-                    "expected fractional part of number, got '" + cur_char + "'");
-            }
+        case '<':
+            transition_push_eps(&LexicalAnalyzer::state_start, ltSm);
             break;
-        case asReadReal:
-            if (is_digit(cur_char)) {
-                transition_buff(asReadReal);
-            } else if (is_letter(cur_char) || cur_char == '.') {
-                transition_error(std::string() +
-                    "unexpected symbol '" + cur_char + "' after number");
-            } else {
-                transition_push_eps(asAfterOperand, ltConstReal);
-            }
+        case '>':
+            transition_push_eps(&LexicalAnalyzer::state_start, ltGr);
             break;
-        case asReadComparison:
-            if (cur_char == '=') {
-                switch (buff[0]) {
-                case '=':
-                    transition_push(asStart, ltEq);
-                    break;
-                case '<':
-                    transition_push(asStart, ltSmEq);
-                    break;
-                case '>':
-                    transition_push(asStart, ltGrEq);
-                    break;
-                case '!':
-                    transition_push(asStart, ltNotEq);
-                    break;
-                }
-            } else {
-                switch (buff[0]) {
-                case '=':
-                    transition_push_eps(asStart, ltAssign);
-                    break;
-                case '<':
-                    transition_push_eps(asStart, ltSm);
-                    break;
-                case '>':
-                    transition_push_eps(asStart, ltGr);
-                    break;
-                case '!':
-                    transition_error("unexpected symbol '!'");
-                }
-            }
-            break;
-        case asReadString:
-            if (cur_char == '\\') {
-                transition(asReadStringEscape);
-            } else if (cur_char == '"') {
-                push_lexeme(ltConstString);
-                transition(asAfterOperand);
-            } else if (cur_char == '\0' || cur_char == '\n') {
-                transition_error("unclosed string");
-            } else {
-                transition_buff(asReadString);
-            }
-            break;
-        case asReadStringEscape:
-            if (cur_char == 'n') {
-                buff += '\n';
-                transition(asReadString);
-            } else if (cur_char == '\0') {
-                transition_error("unclosed string");
-            } else {
-                transition_buff(asReadString);
-            }
-            break;
-        case asReadCommentStart:
-        case asReadCommentStartAO:
-            if (cur_char == '*') {
-                transition(state == asReadCommentStart ? asReadComment : asReadCommentAO);
-            } else {
-                push_lexeme(ltDiv);
-                transition_eps(asStart);
-            }
-            break;
-        case asReadComment:
-        case asReadCommentAO:
-            if (cur_char == '\0') {
-                transition_error("unclosed comment");
-            } else if (cur_char == '*') {
-                transition(state == asReadComment ? asReadCommentEnd : asReadCommentEndAO);
-            } else {
-                transition(state);
-            }
-            break;
-        case asReadCommentEnd:
-        case asReadCommentEndAO:
-            if (cur_char == '/') {
-                transition(state == asReadCommentEnd ? asStart : asAfterOperand);
-            } else {
-                transition_eps(state == asReadCommentEnd ? asReadComment : asReadCommentAO);
-            }
-            break;
-        default: ;
+        case '!':
+            transition_error("unexpected symbol '!'");
         }
     }
+}
+
+void LexicalAnalyzer::state_read_string()
+{
+    if (cur_char == '\\') {
+        transition(&LexicalAnalyzer::state_read_string_escape);
+    } else if (cur_char == '"') {
+        push_lexeme(ltConstString);
+        transition(&LexicalAnalyzer::state_after_operand);
+    } else if (cur_char == '\0' || cur_char == '\n') {
+        transition_error("unclosed string");
+    } else {
+        transition_buff(&LexicalAnalyzer::state_read_string);
+    }
+}
+
+void LexicalAnalyzer::state_read_string_escape()
+{
+    if (cur_char == 'n') {
+        buff += '\n';
+        transition(&LexicalAnalyzer::state_read_string);
+    } else if (cur_char == '\0') {
+        transition_error("unclosed string");
+    } else {
+        transition_buff(&LexicalAnalyzer::state_read_string);
+    }
+}
+
+void LexicalAnalyzer::state_read_comment_start()
+{
+    if (cur_char == '*') {
+        buff = "";
+        transition(&LexicalAnalyzer::state_read_comment);
+    } else {
+        push_lexeme(ltDiv);
+        transition_eps(&LexicalAnalyzer::state_start);
+    }
+}
+
+void LexicalAnalyzer::state_read_comment_start_AO()
+{
+    if (cur_char == '*') {
+        buff = "";
+        transition(&LexicalAnalyzer::state_read_comment_AO);
+    } else {
+        push_lexeme(ltDiv);
+        transition_eps(&LexicalAnalyzer::state_start);
+    }
+}
+
+void LexicalAnalyzer::state_read_comment()
+{
+    if (cur_char == '\0') {
+        transition_error("unclosed comment");
+    } else if (cur_char == '*') {
+        transition(&LexicalAnalyzer::state_read_comment_end);
+    } else {
+        transition(&LexicalAnalyzer::state_read_comment);
+    }
+}
+
+void LexicalAnalyzer::state_read_comment_AO()
+{
+    if (cur_char == '\0') {
+        transition_error("unclosed comment");
+    } else if (cur_char == '*') {
+        transition(&LexicalAnalyzer::state_read_comment_end_AO);
+    } else {
+        transition(&LexicalAnalyzer::state_read_comment_AO);
+    }
+}
+
+void LexicalAnalyzer::state_read_comment_end()
+{
+    if (cur_char == '/') {
+        transition(&LexicalAnalyzer::state_start);
+    } else {
+        transition_eps(&LexicalAnalyzer::state_read_comment);
+    }
+}
+
+void LexicalAnalyzer::state_read_comment_end_AO()
+{
+    if (cur_char == '/') {
+        transition(&LexicalAnalyzer::state_after_operand);
+    } else {
+        transition_eps(&LexicalAnalyzer::state_read_comment_AO);
+    }
+}
+
+
+void LexicalAnalyzer::process()
+{
+    done = false;
+    result.clear();
+    buff = "";
+    line = 1;
+    column = 0;
+    transition(&LexicalAnalyzer::state_start);
+    while (state) {
+        (this->*state)();
+    }
+    done = true;
 }
 
 void LexicalAnalyzer::parse_stream(std::istream &stream)
 {
     input = &stream;
-
-    result.clear();
-    buff = "";
-    line = 1;
-    column = 0;
-
-    transition(asStart);
     process();
 }
 
@@ -353,7 +408,7 @@ void LexicalAnalyzer::parse_string(const std::string &str)
 
 const LexemeArray &LexicalAnalyzer::get_lexemes() const
 {
-    if (state != asDone) {
+    if (!done) {
         throw std::runtime_error("Attempt to get lexems from analyzer in error state.");
     }
     return result;
