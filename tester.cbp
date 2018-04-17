@@ -26,6 +26,10 @@
 		<Unit filename="lexeme.h" />
 		<Unit filename="lexical.cpp" />
 		<Unit filename="lexical.h" />
+		<Unit filename="values.cpp" />
+		<Unit filename="values.h" />
+		<Unit filename="variables.cpp" />
+		<Unit filename="variables.h" />
 		<Unit filename="syntax.cpp" />
 		<Unit filename="syntax.h" />
 		<Unit filename="main.cpp" />

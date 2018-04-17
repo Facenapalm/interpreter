@@ -1,19 +1,19 @@
 #include "lexeme.h"
 
-Lexeme::Lexeme(LexemeType type, std::string value, unsigned line, unsigned pos):
+Lexeme::Lexeme(LexemeType type, const std::string &value, unsigned line, unsigned pos):
     type(type), value(value), line(line), pos(pos) {}
 
-LexemeType Lexeme::get_type()
+LexemeType Lexeme::get_type() const
 {
     return type;
 }
 
-std::string Lexeme::get_value()
+const std::string &Lexeme::get_value() const
 {
     return value;
 }
 
-std::string Lexeme::stringify_type()
+inline std::string Lexeme::stringify_type() const
 {
     if (type >= ltKeywordsStart && type <= ltKeywordsEnd) {
         return "Keyword";
@@ -34,7 +34,7 @@ std::string Lexeme::stringify_type()
     }
 }
 
-std::string Lexeme::stringify_value()
+inline std::string Lexeme::stringify_value() const
 {
     switch (type) {
     case ltConstInt:
@@ -48,7 +48,7 @@ std::string Lexeme::stringify_value()
     }
 }
 
-void Lexeme::print(std::ostream &stream)
+void Lexeme::print(std::ostream &stream) const
 {
     stream << "lexeme<" << stringify_type() << "> " << stringify_value() <<
         " (line " << line << ", column " << pos << ")";

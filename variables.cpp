@@ -1,0 +1,30 @@
+#include "variables.h"
+
+void VariablesTable::clear()
+{
+    data.clear();
+}
+
+bool VariablesTable::register_name(std::string name, ValueType type)
+{
+    if (get_number(name) != -1) {
+        return false;
+    }
+    data.push_back({ (VariableID)data.size(), name, type });
+    return true;
+}
+
+VariableID VariablesTable::get_number(std::string name) const
+{
+    for (auto i = data.begin(); i != data.end(); i++) {
+        if (i->name == name) {
+            return i->number;
+        }
+    }
+    return -1;
+}
+
+ValueType VariablesTable::get_type(VariableID number) const
+{
+    return data[number].type;
+}

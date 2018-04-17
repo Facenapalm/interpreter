@@ -81,13 +81,13 @@ private:
     unsigned line;
     unsigned pos;
 
-    std::string stringify_type();
-    std::string stringify_value();
+    inline std::string stringify_type() const;
+    inline std::string stringify_value() const;
 public:
-    Lexeme(LexemeType type, std::string value, unsigned line, unsigned pos);
-    LexemeType get_type();
-    std::string get_value();
-    void print(std::ostream &stream);
+    Lexeme(LexemeType type, const std::string &value, unsigned line, unsigned pos);
+    LexemeType get_type() const;
+    const std::string &get_value() const;
+    void print(std::ostream &stream) const;
 };
 
 typedef std::vector<Lexeme> LexemeArray;
