@@ -3,7 +3,6 @@
 
 #include <iostream>
 #include <string>
-
 #include "lexeme.h"
 
 class LexicalAnalyzer {
@@ -11,7 +10,7 @@ private:
     typedef void (LexicalAnalyzer::*AnalyzerState)();
 
     LexemeArray result;
-    bool done;
+    bool ready;
 
     AnalyzerState state;
     std::string buff;

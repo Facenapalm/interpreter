@@ -3,6 +3,7 @@
 
 #include "lexeme.h"
 #include "variables.h"
+#include "program.h"
 
 struct ValueInfo {
     ValueType type;
@@ -14,8 +15,9 @@ private:
     LexemeArray lexemes;
     size_t pos;
     Lexeme *cur_lexeme;
-    LexemeType cur_type;
+    LexemeType cur_lexeme_type;
 
+    std::vector<ProgramNode> program;
     VariablesTable variables;
     bool ready;
 
@@ -25,6 +27,10 @@ private:
     void throw_syntax_error(const std::string &message);
     void throw_semantic_error(const Lexeme *where, const std::string &message);
     void throw_type_mismatch(const Lexeme *where, ValueType left, ValueType right);
+
+    void gen_constant(ValueType type, const std::string &value);
+    void gen_constant(Integer value);
+    void gen_operation(Operation operation);
 
     // program -> `program` `{` descriptions operands `}`
     // descriptions -> { type desctiption `;` }
@@ -71,6 +77,7 @@ private:
 public:
     SyntaxAnalyzer();
     void parse_array(const LexemeArray &array);
+    Program *get_program();
 };
 
 #endif // SYNTAX_H

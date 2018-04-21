@@ -1,11 +1,10 @@
 #include <sstream>
 #include <cstdlib>
-
 #include "values.h"
 
 ValueType Value::get_type() const
 {
-    return type;
+    return vtNone;
 }
 
 IntegerValue::IntegerValue(Integer value): value(value) {}
@@ -14,6 +13,16 @@ IntegerValue::IntegerValue(const String &str)
 {
     StringValue temp(str);
     value = temp.to_integer();
+}
+
+Value *IntegerValue::clone() const
+{
+    return new IntegerValue(value);
+}
+
+ValueType IntegerValue::get_type() const
+{
+    return vtInteger;
 }
 
 Integer IntegerValue::to_integer() const
@@ -39,6 +48,16 @@ Real IntegerValue::to_real() const
 }
 
 StringValue::StringValue(const String &value): value(value) {}
+
+Value *StringValue::clone() const
+{
+    return new StringValue(value);
+}
+
+ValueType StringValue::get_type() const
+{
+    return vtString;
+}
 
 Integer StringValue::to_integer() const
 {
@@ -66,6 +85,16 @@ BooleanValue::BooleanValue(const String &str)
 {
     StringValue temp(str);
     value = temp.to_boolean();
+}
+
+Value *BooleanValue::clone() const
+{
+    return new BooleanValue(value);
+}
+
+ValueType BooleanValue::get_type() const
+{
+    return vtBoolean;
 }
 
 Integer BooleanValue::to_integer() const
@@ -106,6 +135,16 @@ RealValue::RealValue(const String &str)
 {
     StringValue temp(str);
     value = temp.to_real();
+}
+
+Value *RealValue::clone() const
+{
+    return new RealValue(value);
+}
+
+ValueType RealValue::get_type() const
+{
+    return vtReal;
 }
 
 Integer RealValue::to_integer() const

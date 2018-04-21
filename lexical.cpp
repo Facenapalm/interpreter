@@ -1,12 +1,11 @@
-#include <sstrea8m>
-#include <stdexcept>
-
+#include <sstream>
+#include "exceptions.h"
 #include "lexical.h"
 
 LexicalAnalyzer::LexicalAnalyzer()
 {
     buff.reserve(256);
-    done = false;
+    ready = false;
 }
 
 void LexicalAnalyzer::get_next_char()
@@ -74,7 +73,7 @@ void LexicalAnalyzer::transition_error(const std::string &message)
     std::stringstream stream;
     stream << "Lexical error: " << message <<
         " (line " << line << ", column " << column << ")";
-    throw std::runtime_error(stream.str());
+    throw LexicalError(stream.str());
 }
 
 static inline bool is_space(char ch)
@@ -273,6 +272,8 @@ void LexicalAnalyzer::state_read_comparison()
         case '!':
             transition_push(&LexicalAnalyzer::state_start, ltNotEq);
             break;
+        default:
+            throw std::runtime_error("StateReadComparison fail");
         }
     } else {
         switch (buff[0]) {
@@ -287,6 +288,8 @@ void LexicalAnalyzer::state_read_comparison()
             break;
         case '!':
             transition_error("unexpected symbol '!'");
+        default:
+            throw std::runtime_error("StateReadComparison fail");
         }
     }
 }
@@ -382,7 +385,7 @@ void LexicalAnalyzer::state_read_comment_end_AO()
 
 void LexicalAnalyzer::process()
 {
-    done = false;
+    ready = false;
     result.clear();
     buff = "";
     line = 1;
@@ -391,7 +394,7 @@ void LexicalAnalyzer::process()
     while (state) {
         (this->*state)();
     }
-    done = true;
+    ready = true;
 }
 
 void LexicalAnalyzer::parse_stream(std::istream &stream)
@@ -408,8 +411,8 @@ void LexicalAnalyzer::parse_string(const std::string &str)
 
 const LexemeArray &LexicalAnalyzer::get_lexemes() const
 {
-    if (!done) {
-        throw std::runtime_error("Attempt to get lexems from analyzer in error state.");
+    if (!ready) {
+        throw std::runtime_error("Attempt to get lexems from analyzer in error state");
     }
     return result;
 }

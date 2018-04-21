@@ -17,14 +17,14 @@ typedef bool Boolean;
 typedef double Real;
 
 class Value {
-private:
-    ValueType type;
 public:
-    ValueType get_type() const;
+    virtual Value *clone() const = 0;
+    virtual ValueType get_type() const;
     virtual Integer to_integer() const = 0;
     virtual String to_string() const = 0;
     virtual Boolean to_boolean() const = 0;
     virtual Real to_real() const = 0;
+    virtual ~Value() = default;
 };
 
 class IntegerValue: public Value {
@@ -33,6 +33,8 @@ private:
 public:
     IntegerValue(Integer value);
     IntegerValue(const String &str);
+    Value *clone() const override;
+    ValueType get_type() const override;
     Integer to_integer() const override;
     String to_string() const override;
     Boolean to_boolean() const override;
@@ -44,6 +46,8 @@ private:
     String value;
 public:
     StringValue(const String &value);
+    Value *clone() const override;
+    ValueType get_type() const override;
     Integer to_integer() const override;
     String to_string() const override;
     Boolean to_boolean() const override;
@@ -56,6 +60,8 @@ private:
 public:
     BooleanValue(Boolean value);
     BooleanValue(const String &str);
+    Value *clone() const override;
+    ValueType get_type() const override;
     Integer to_integer() const override;
     String to_string() const override;
     Boolean to_boolean() const override;
@@ -68,6 +74,8 @@ private:
 public:
     RealValue(Real value);
     RealValue(const String &str);
+    Value *clone() const override;
+    ValueType get_type() const override;
     Integer to_integer() const override;
     String to_string() const override;
     Boolean to_boolean() const override;
