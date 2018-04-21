@@ -399,18 +399,24 @@ ValueInfo SyntaxAnalyzer::state_expression_and()
     return cur;
 }
 
+static inline bool is_comparer(LexemeType lexeme)
+{
+    return lexeme >= ltComparersStart && lexeme <= ltComparersEnd;
+}
+
 ValueInfo SyntaxAnalyzer::state_expression_cmp()
 {
     Lexeme *lexeme;
     ValueInfo cur, prev;
     #ifdef COMPARISON_CHAIN_SUPPORT
-    int chain_length = 0;
+    bool first_cmp = true;
     #endif // COMPARISON_CHAIN_SUPPORT
 
     cur = state_expression_sum();
-    while (cur_lexeme_type >= ltComparersStart && cur_lexeme_type <= ltComparersEnd) {
+    while (is_comparer(cur_lexeme_type)) {
         #ifdef COMPARISON_CHAIN_SUPPORT
-        if (chain_length > 0) {
+        if (!first_cmp) {
+            // load previous constant
             gen_constant(0);
             gen_operation(opLoadVariable);
         }
@@ -423,8 +429,11 @@ ValueInfo SyntaxAnalyzer::state_expression_cmp()
         cur.is_var = false;
 
         #ifdef COMPARISON_CHAIN_SUPPORT
-        gen_constant(0);
-        gen_operation(opSaveVariable);
+        if (is_comparer(cur_lexeme_type)) {
+            // save constant for next comparison
+            gen_constant(0);
+            gen_operation(opSaveVariable);
+        }
         #endif // COMPARISON_CHAIN_SUPPORT
 
         if (cur.type == vtString && prev.type == vtString) {
@@ -500,19 +509,17 @@ ValueInfo SyntaxAnalyzer::state_expression_cmp()
         }
 
         #ifdef COMPARISON_CHAIN_SUPPORT
-        chain_length += 1;
+        if (!first_cmp) {
+            gen_operation(opBoolAnd);
+        }
+        first_cmp = false;
+        if (!is_comparer(cur_lexeme_type)) {
+            cur.type = vtBoolean;
+        }
         #else
         cur.type = vtBoolean;
         #endif // COMPARISON_CHAIN_SUPPORT
     }
-    #ifdef COMPARISON_CHAIN_SUPPORT
-    if (chain_length > 0) {
-        cur.type = vtBoolean;
-    }
-    for (int i = 1; i < chain_length; i++) {
-        gen_operation(opBoolAnd);
-    }
-    #endif // COMPARISON_CHAIN_SUPPORT
     return cur;
 }
 
