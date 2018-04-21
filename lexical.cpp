@@ -13,6 +13,14 @@ void LexicalAnalyzer::get_next_char()
     if (!(*input >> std::noskipws >> cur_char)) {
         cur_char = '\0';
     }
+    #ifdef CASE_INSENSETIVE
+    if (state != &LexicalAnalyzer::state_read_string &&
+        state != &LexicalAnalyzer::state_read_string_escape &&
+        cur_char >= 'A' && cur_char <= 'Z') {
+        cur_char -= 'A';
+        cur_char += 'a';
+    }
+    #endif // CASE_INSENSETIVE
     if (cur_char == '\n') {
         line += 1;
         column = 0;
@@ -38,23 +46,23 @@ void LexicalAnalyzer::push_lexeme(LexemeType type)
 
 void LexicalAnalyzer::transition(AnalyzerState new_state)
 {
-    get_next_char();
     state = new_state;
+    get_next_char();
 }
 
 void LexicalAnalyzer::transition_buff(AnalyzerState new_state)
 {
     buff_char();
-    get_next_char();
     state = new_state;
+    get_next_char();
 }
 
 void LexicalAnalyzer::transition_push(AnalyzerState new_state, LexemeType type)
 {
     buff_char();
     push_lexeme(type);
-    get_next_char();
     state = new_state;
+    get_next_char();
 }
 
 void LexicalAnalyzer::transition_eps(AnalyzerState new_state)
@@ -145,6 +153,14 @@ static inline LexemeType get_keyword_type(const std::string &str)
         return ltAnd;
     } else if (str == "or") {
         return ltOr;
+    #ifdef ALLOW_ALTERNATIVE_NAMES
+    } else if (str == "print") {
+        return ltWrite;
+    } else if (str == "str") {
+        return ltString;
+    } else if (str == "bool") {
+        return ltBoolean;
+    #endif // ALLOW_ALTERNATIVE_NAMES
     } else {
         return ltIdentificator;
     }
