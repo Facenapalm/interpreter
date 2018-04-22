@@ -21,9 +21,11 @@ struct ProgramNode {
     NodeData data;
 };
 
+typedef std::vector<ProgramNode> ProgramNodes;
+
 class Program {
 private:
-    std::vector<ProgramNode> program;
+    ProgramNodes program;
     std::vector<Value *> variables;
     std::vector<Value *> stack;
     size_t pos;
@@ -34,7 +36,7 @@ private:
     inline Value *top();
     inline Value *pop();
 public:
-    Program(const std::vector<ProgramNode> &program, VariableID variables_count);
+    Program(const ProgramNodes &program, VariableID variables_count);
     void execute(std::istream &in, std::ostream &out);
     void print(std::ostream &out);
     ~Program();

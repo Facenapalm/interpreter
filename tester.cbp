@@ -32,6 +32,8 @@
 		<Unit filename="values.h" />
 		<Unit filename="variables.cpp" />
 		<Unit filename="variables.h" />
+        <Unit filename="labels.cpp" />
+        <Unit filename="labels.h" />
 		<Unit filename="syntax.cpp" />
 		<Unit filename="syntax.h" />
         <Unit filename="operations.cpp" />

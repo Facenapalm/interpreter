@@ -91,7 +91,7 @@ static inline bool is_space(char ch)
 
 static inline bool is_letter(char ch)
 {
-    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z');
+    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch == '_';
 }
 
 static inline bool is_digit(char ch)

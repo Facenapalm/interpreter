@@ -64,8 +64,9 @@ void Program::execute(std::istream &in, std::ostream &out)
         case opJump:
             right = pop();
             left = pop();
-            if (left->to_boolean()) {
+            if (!left->to_boolean()) {
                 pos = right->to_integer();
+                stack.clear();
             }
             delete left;
             delete right;

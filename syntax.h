@@ -3,6 +3,7 @@
 
 #include "lexeme.h"
 #include "variables.h"
+#include "labels.h"
 #include "program.h"
 
 struct ValueInfo {
@@ -12,13 +13,19 @@ struct ValueInfo {
 
 class SyntaxAnalyzer {
 private:
+    enum JumpType {
+        jtUnconditional,
+        jtAtTrue,
+        jtAtFalse
+    };
     LexemeArray lexemes;
     size_t pos;
     Lexeme *cur_lexeme;
     LexemeType cur_lexeme_type;
 
-    std::vector<ProgramNode> program;
+    ProgramNodes program;
     VariablesTable variables;
+    LabelsTable labels;
     bool ready;
 
     void get_next_lexeme();
@@ -30,7 +37,10 @@ private:
 
     void gen_constant(ValueType type, const std::string &value);
     void gen_constant(Integer value);
+    void gen_constant();
     void gen_operation(Operation operation);
+    void gen_label(LabelID label);
+    void gen_jump(LabelID label, JumpType type);
 
     // program -> `program` `{` descriptions operands `}`
     // descriptions -> { type desctiption `;` }
@@ -64,8 +74,8 @@ private:
     void state_descriptions();
     void state_description(ValueType type);
     void state_variable(ValueType type);
-    void state_operators();
-    void state_operator();
+    void state_operators(LabelID cont_label, LabelID break_label);
+    void state_operator(LabelID cont_label, LabelID break_label);
     ValueInfo state_expression();
     ValueInfo state_expression_or();
     ValueInfo state_expression_and();

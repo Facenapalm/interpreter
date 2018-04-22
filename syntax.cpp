@@ -139,6 +139,14 @@ void SyntaxAnalyzer::gen_constant(Integer value)
     program.push_back(result);
 }
 
+void SyntaxAnalyzer::gen_constant()
+{
+    ProgramNode result;
+    result.type = ntValue;
+    result.data.value = NULL;
+    program.push_back(result);
+}
+
 void SyntaxAnalyzer::gen_operation(Operation operation)
 {
     ProgramNode result;
@@ -147,6 +155,31 @@ void SyntaxAnalyzer::gen_operation(Operation operation)
     program.push_back(result);
 }
 
+void SyntaxAnalyzer::gen_label(LabelID label)
+{
+    labels.set_value(label, new IntegerValue(program.size()));
+}
+
+void SyntaxAnalyzer::gen_jump(LabelID label, JumpType type)
+{
+    ProgramNode result;
+    result.type = ntValue;
+    switch (type) {
+    case jtUnconditional:
+        result.data.value = new BooleanValue(false);
+        program.push_back(result);
+        break;
+    case jtAtTrue:
+        gen_operation(opBoolNot);
+        break;
+    default:
+        ;
+    }
+    labels.add_node(label, program.size());
+    result.data.value = NULL;
+    program.push_back(result);
+    gen_operation(opJump);
+}
 
 void SyntaxAnalyzer::state_program()
 {
@@ -156,9 +189,10 @@ void SyntaxAnalyzer::state_program()
     check_lexeme(ltProgram, "program should starts with 'program' keyword");
     check_lexeme(ltBlockOpen, "expected '{'");
     state_descriptions();
-    state_operators();
+    state_operators(undefined_label, undefined_label);
     check_lexeme(ltBlockClose, "expected '}'");
     check_lexeme(ltNone, "unexpected continuation after program end");
+    labels.propagate(program);
 }
 
 void SyntaxAnalyzer::state_descriptions()
@@ -209,61 +243,94 @@ void SyntaxAnalyzer::state_variable(ValueType variable_type)
     }
 }
 
-void SyntaxAnalyzer::state_operators()
+void SyntaxAnalyzer::state_operators(LabelID cont_label, LabelID break_label)
 {
     while (cur_lexeme_type != ltBlockClose) {
-        state_operator();
+        state_operator(cont_label, break_label);
     }
 }
 
-void SyntaxAnalyzer::state_operator()
+void SyntaxAnalyzer::state_operator(LabelID cont_label, LabelID break_label)
 {
     Lexeme *lexeme = cur_lexeme;
-    VariableID id;
+    VariableID var;
+    LabelID then_end, else_end;
+    LabelID condition, loop_start, loop_end;
 
     switch (cur_lexeme_type) {
     case ltNone:
         throw_syntax_error("expected '}'");
         break;
-    case ltIf: // TODO
+    case ltIf:
+        then_end = labels.new_label();
         get_next_lexeme();
         check_lexeme(ltBracketOpen, "expected '('");
         if (state_expression().type != vtBoolean) {
             throw_semantic_error(lexeme, "condition should be boolean");
         }
         check_lexeme(ltBracketClose, "expected ')'");
-        state_operator();
+        gen_jump(then_end, jtAtFalse);
+        state_operator(cont_label, break_label);
         if (cur_lexeme_type == ltElse) {
             get_next_lexeme();
-            state_operator();
+            else_end = labels.new_label();
+            gen_jump(else_end, jtUnconditional);
+            gen_label(then_end);
+            state_operator(cont_label, break_label);
+            gen_label(else_end);
+        } else {
+            gen_label(then_end);
         }
         break;
-    case ltWhile: // TODO
+    case ltWhile:
+        condition = labels.new_label();
+        loop_end = labels.new_label();
         get_next_lexeme();
         check_lexeme(ltBracketOpen, "expected '('");
+        gen_label(condition);
         if (state_expression().type != vtBoolean) {
             throw_semantic_error(lexeme, "condition should be boolean");
         }
+        gen_jump(loop_end, jtAtFalse);
         check_lexeme(ltBracketClose, "expected ')'");
-        state_operator();
+        state_operator(condition, loop_end);
+        gen_jump(condition, jtUnconditional);
+        gen_label(loop_end);
         break;
-    case ltDo: // TODO
+    case ltDo:
+        condition = labels.new_label();
+        loop_start = labels.new_label();
+        loop_end = labels.new_label();
         get_next_lexeme();
-        state_operator();
+        gen_label(loop_start);
+        state_operator(condition, loop_end);
+        lexeme = cur_lexeme;
         check_lexeme(ltWhile, "expected 'while' keyword");
         check_lexeme(ltBracketOpen, "expected '('");
+        gen_label(condition);
         if (state_expression().type != vtBoolean) {
             throw_semantic_error(lexeme, "condition should be boolean");
         }
+        gen_jump(loop_start, jtAtTrue);
         check_lexeme(ltBracketClose, "expected ')'");
+        check_lexeme(ltSemicolon, "expected ';'");
+        gen_label(loop_end);
         break;
-    case ltContinue: // TODO
+    case ltContinue:
         get_next_lexeme();
         check_lexeme(ltSemicolon, "expected ';'");
+        if (cont_label == undefined_label) {
+            throw_semantic_error(lexeme, "continue outside of the loop");
+        }
+        gen_jump(cont_label, jtUnconditional);
         break;
-    case ltBreak: // TODO
+    case ltBreak:
         get_next_lexeme();
         check_lexeme(ltSemicolon, "expected ';'");
+        if (break_label == undefined_label) {
+            throw_semantic_error(lexeme, "break outside of the loop");
+        }
+        gen_jump(break_label, jtUnconditional);
         break;
     case ltRead:
         get_next_lexeme();
@@ -273,13 +340,13 @@ void SyntaxAnalyzer::state_operator()
         check_lexeme(ltBracketClose, "expected ')'");
         check_lexeme(ltSemicolon, "expected ';'");
 
-        id = variables.get_number(lexeme->get_value());
-        if (id < 0) {
+        var = variables.get_number(lexeme->get_value());
+        if (var < 0) {
             throw_semantic_error(lexeme, "variable is not defined");
         }
 
         gen_operation(opReadLn);
-        switch (variables.get_type(id)) {
+        switch (variables.get_type(var)) {
         case vtInteger:
             gen_operation(opIntPlusUn);
             break;
@@ -291,7 +358,7 @@ void SyntaxAnalyzer::state_operator()
         default:
             break;
         }
-        gen_constant(id);
+        gen_constant(var);
         gen_operation(opSaveVariable);
         gen_operation(opClearStack);
         break;
@@ -311,7 +378,7 @@ void SyntaxAnalyzer::state_operator()
         break;
     case ltBlockOpen:
         check_lexeme(ltBlockOpen, "expected '{'");
-        state_operators();
+        state_operators(cont_label, break_label);
         check_lexeme(ltBlockClose, "expected '}'");
         break;
     default:
@@ -326,7 +393,7 @@ ValueInfo SyntaxAnalyzer::state_expression()
 {
     Lexeme *lexeme;
     ValueInfo cur, prev, first;
-    std::vector<ProgramNode> variable_links;
+    ProgramNodes variable_links;
 
     first = cur = state_expression_or();
     while (cur_lexeme_type == ltAssign) {
@@ -700,6 +767,7 @@ void SyntaxAnalyzer::parse_array(const LexemeArray &array)
 
     program.clear();
     variables.clear();
+    labels.clear();
     ready = false;
 
     state_program();
