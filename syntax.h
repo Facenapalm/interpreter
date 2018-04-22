@@ -37,7 +37,6 @@ private:
 
     void gen_constant(ValueType type, const std::string &value);
     void gen_constant(Integer value);
-    void gen_constant();
     void gen_operation(Operation operation);
     void gen_label(LabelID label);
     void gen_jump(LabelID label, JumpType type);

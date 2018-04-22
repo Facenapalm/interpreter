@@ -139,14 +139,6 @@ void SyntaxAnalyzer::gen_constant(Integer value)
     program.push_back(result);
 }
 
-void SyntaxAnalyzer::gen_constant()
-{
-    ProgramNode result;
-    result.type = ntValue;
-    result.data.value = NULL;
-    program.push_back(result);
-}
-
 void SyntaxAnalyzer::gen_operation(Operation operation)
 {
     ProgramNode result;
