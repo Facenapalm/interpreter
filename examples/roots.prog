@@ -12,13 +12,13 @@ program {
         } else if (b == 0 and c != 0) {
             write("No roots.");
         } else {
-            write("One root:", - c / b );
+            write("One root: ", - c / b );
         }
     } else {
         if ((d = b*b - 4*a*c) < 0) {
             write("No roots.");
         } else if (d == 0) {
-            write("One root:", -b / (2.0 * a) );
+            write("One root: ", -b / (2.0 * a) );
         } else if (d > 0) {
             left = 0;
             right = d;
@@ -31,7 +31,7 @@ program {
                 }
             }
             root = (right + left) / 2.0;
-            write("Two roots:", (-b + root) / (2.0 * a), (-b - root) / (2.0 * a) );
+            write("Two roots: ", (-b + root) / (2.0 * a), " ", (-b - root) / (2.0 * a) );
         }
     }
 }

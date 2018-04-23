@@ -25,7 +25,6 @@ void show_help()
     std::cout << "--dump-rpn     - display RPN representation of a program" << std::endl;
     std::cout << "--infinite     - interpretate program over and over again" << std::endl;
     std::cout << "--help         - displays help" << std::endl;
-    hr();
 }
 
 std::string read_program()
@@ -85,6 +84,7 @@ int main(int argc, char **argv)
             std::string current = argv[i];
             if (current == "--help") {
                 show_help();
+                return 0;
             } else if (current == "--dump-lexemes") {
                 dump_lexemes = true;
             } else if (current == "--dump-rpn") {
