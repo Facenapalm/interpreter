@@ -666,7 +666,7 @@ ValueInfo SyntaxAnalyzer::state_expression_un()
         Lexeme *lexeme = cur_lexeme;
         LexemeType lexeme_type = cur_lexeme_type;
         ValueInfo result;
-        bool correct;
+        bool correct = true;
 
         get_next_lexeme();
         result = state_expression_un();
