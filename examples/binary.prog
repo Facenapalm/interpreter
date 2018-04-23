@@ -1,0 +1,27 @@
+program {
+    int value;
+    string result = "";
+    bool first_attempt = true;
+    do {
+        if (first_attempt) {
+            write("Enter any positive number...");
+            first_attempt = false;
+        } else {
+            write("Number MUST be positive!");
+        }
+        read(value);
+    } while (value < 0);
+    if (value == 0) {
+        result = "0";
+    } else {
+        while (value != 0) {
+            if (value % 2 == 1) {
+                result = "1" + result;
+            } else {
+                result = "0" + result;
+            }
+            value = value / 2;
+        }
+    }
+    write("Binary form: ", result);
+}

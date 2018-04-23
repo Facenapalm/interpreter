@@ -1,0 +1,6 @@
+program {
+    string name;
+    write("What's your name?");
+    read(name);
+    write("Hello, ", name, "!");
+}

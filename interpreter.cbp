@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="interpreter" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="./interpreter" prefix_auto="1" extension_auto="1" />
+				<Option object_output="./obj/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+        <Unit filename="source/config.h" />
+        <Unit filename="source/exceptions.h" />
+		<Unit filename="source/lexeme.cpp" />
+		<Unit filename="source/lexeme.h" />
+		<Unit filename="source/lexical.cpp" />
+		<Unit filename="source/lexical.h" />
+		<Unit filename="source/values.cpp" />
+		<Unit filename="source/values.h" />
+		<Unit filename="source/variables.cpp" />
+		<Unit filename="source/variables.h" />
+        <Unit filename="source/labels.cpp" />
+        <Unit filename="source/labels.h" />
+		<Unit filename="source/syntax.cpp" />
+		<Unit filename="source/syntax.h" />
+        <Unit filename="source/operations.cpp" />
+        <Unit filename="source/operations.h" />
+        <Unit filename="source/program.cpp" />
+        <Unit filename="source/program.h" />
+		<Unit filename="source/main.cpp" />
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+			<lib_finder disable_auto="1" />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

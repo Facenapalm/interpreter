@@ -1,0 +1,37 @@
+program {
+    int a, b, c, d;
+    real left, right, root;
+    write("a*x^2 + b*x + c = 0");
+    write("Enter a, b and c...");
+    read(a);
+    read(b);
+    read(c);
+    if (a == 0) {
+        if (b == c == 0) {
+            write("Any number is a root.");
+        } else if (b == 0 and c != 0) {
+            write("No roots.");
+        } else {
+            write("One root:", - c / b );
+        }
+    } else {
+        if ((d = b*b - 4*a*c) < 0) {
+            write("No roots.");
+        } else if (d == 0) {
+            write("One root:", -b / (2.0 * a) );
+        } else if (d > 0) {
+            left = 0;
+            right = d;
+            while (right - left >= 0.000001) {
+                root = (right + left) / 2.0;
+                if (root * root > d) {
+                    right = root;
+                } else {
+                    left = root;
+                }
+            }
+            root = (right + left) / 2.0;
+            write("Two roots:", (-b + root) / (2.0 * a), (-b - root) / (2.0 * a) );
+        }
+    }
+}
