@@ -36,20 +36,20 @@ private:
 
     void state_start();
     void state_after_operand();
-    void state_read_identificator();
-    void state_read_sign();
-    void state_read_int();
-    void state_read_dot();
-    void state_read_real();
-    void state_read_comparison();
-    void state_read_string();
-    void state_read_string_escape();
-    void state_read_comment_start();
-    void state_read_comment_start_AO();
-    void state_read_comment();
-    void state_read_comment_AO();
-    void state_read_comment_end();
-    void state_read_comment_end_AO();
+    void state_identificator();
+    void state_sign();
+    void state_int();
+    void state_dot();
+    void state_real();
+    void state_comparison();
+    void state_string();
+    void state_escape();
+    void state_comment_start();
+    void state_comment_start_AO();
+    void state_comment();
+    void state_comment_AO();
+    void state_comment_end();
+    void state_comment_end_AO();
 
     void process();
 public:

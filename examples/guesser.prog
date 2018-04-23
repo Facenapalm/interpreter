@@ -28,7 +28,7 @@ program {
             attempt = attempt - 1;
         }
         if (attempt == 0) {
-            write("You lose. Try agains? [Y/N]");
+            write("You lose. Try again? [Y/N]");
         } else {
             write("You win. One more? [Y/N]");
         }

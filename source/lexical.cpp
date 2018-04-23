@@ -14,8 +14,8 @@ void LexicalAnalyzer::get_next_char()
         cur_char = '\0';
     }
     #ifdef CASE_INSENSETIVE
-    if (state != &LexicalAnalyzer::state_read_string &&
-        state != &LexicalAnalyzer::state_read_string_escape &&
+    if (state != &LexicalAnalyzer::state_string &&
+        state != &LexicalAnalyzer::state_escape &&
         cur_char >= 'A' && cur_char <= 'Z') {
         cur_char -= 'A';
         cur_char += 'a';
@@ -173,27 +173,27 @@ void LexicalAnalyzer::state_start()
     } else if (is_space(cur_char)) {
         transition(&LexicalAnalyzer::state_start);
     } else if (is_digit(cur_char)) {
-        transition_buff(&LexicalAnalyzer::state_read_int);
+        transition_buff(&LexicalAnalyzer::state_int);
     } else if (is_letter(cur_char)) {
-        transition_buff(&LexicalAnalyzer::state_read_identificator);
+        transition_buff(&LexicalAnalyzer::state_identificator);
     } else if (cur_char == '"') {
-        transition(&LexicalAnalyzer::state_read_string);
+        transition(&LexicalAnalyzer::state_string);
     } else if (cur_char == '{' || cur_char == '}' || cur_char == '(' ||
                cur_char == ',' || cur_char == ';') {
         transition_push(&LexicalAnalyzer::state_start, get_separator_type(cur_char));
     } else if (cur_char == ')') {
         transition_push(&LexicalAnalyzer::state_after_operand, ltBracketClose);
     } else if (cur_char == '+' || cur_char == '-') {
-        transition_buff(&LexicalAnalyzer::state_read_sign);
+        transition_buff(&LexicalAnalyzer::state_sign);
     } else if (cur_char == '*') {
         transition_push(&LexicalAnalyzer::state_start, ltMul);
     } else if (cur_char == '%') {
         transition_push(&LexicalAnalyzer::state_start, ltMod);
     } else if (cur_char == '/') {
-        transition_buff(&LexicalAnalyzer::state_read_comment_start);
+        transition_buff(&LexicalAnalyzer::state_comment_start);
     } else if (cur_char == '=' || cur_char == '!' ||
                cur_char == '<' || cur_char == '>') {
-        transition_buff(&LexicalAnalyzer::state_read_comparison);
+        transition_buff(&LexicalAnalyzer::state_comparison);
     } else {
         transition_error(std::string() +
             "unexpected symbol '" + cur_char + "'");
@@ -209,16 +209,16 @@ void LexicalAnalyzer::state_after_operand()
     } else if (cur_char == '-') {
         transition_push(&LexicalAnalyzer::state_start, ltMinus);
     } else if (cur_char == '/') {
-        transition_buff(&LexicalAnalyzer::state_read_comment_start_AO);
+        transition_buff(&LexicalAnalyzer::state_comment_start_AO);
     } else {
         transition_eps(&LexicalAnalyzer::state_start);
     }
 }
 
-void LexicalAnalyzer::state_read_identificator()
+void LexicalAnalyzer::state_identificator()
 {
     if (is_letter(cur_char) || is_digit(cur_char)) {
-        transition_buff(&LexicalAnalyzer::state_read_identificator);
+        transition_buff(&LexicalAnalyzer::state_identificator);
     } else {
         LexemeType type = get_keyword_type(buff);
         transition_push_eps(type == ltIdentificator ?
@@ -227,21 +227,21 @@ void LexicalAnalyzer::state_read_identificator()
     }
 }
 
-void LexicalAnalyzer::state_read_sign()
+void LexicalAnalyzer::state_sign()
 {
     if (is_digit(cur_char)) {
-        transition_buff(&LexicalAnalyzer::state_read_int);
+        transition_buff(&LexicalAnalyzer::state_int);
     } else {
         transition_push_eps(&LexicalAnalyzer::state_start, buff == "+" ? ltPlusUn : ltMinusUn);
     }
 }
 
-void LexicalAnalyzer::state_read_int()
+void LexicalAnalyzer::state_int()
 {
     if (is_digit(cur_char)) {
-        transition_buff(&LexicalAnalyzer::state_read_int);
+        transition_buff(&LexicalAnalyzer::state_int);
     } else if (cur_char == '.') {
-        transition_buff(&LexicalAnalyzer::state_read_dot);
+        transition_buff(&LexicalAnalyzer::state_dot);
     } else if (is_letter(cur_char)) {
         transition_error(std::string() +
             "unexpected symbol '" + cur_char + "' after number");
@@ -250,20 +250,20 @@ void LexicalAnalyzer::state_read_int()
     }
 }
 
-void LexicalAnalyzer::state_read_dot()
+void LexicalAnalyzer::state_dot()
 {
     if (is_digit(cur_char)) {
-        transition_buff(&LexicalAnalyzer::state_read_real);
+        transition_buff(&LexicalAnalyzer::state_real);
     } else {
         transition_error(std::string() +
             "expected fractional part of number, got '" + cur_char + "'");
     }
 }
 
-void LexicalAnalyzer::state_read_real()
+void LexicalAnalyzer::state_real()
 {
     if (is_digit(cur_char)) {
-        transition_buff(&LexicalAnalyzer::state_read_real);
+        transition_buff(&LexicalAnalyzer::state_real);
     } else if (is_letter(cur_char) || cur_char == '.') {
         transition_error(std::string() +
             "unexpected symbol '" + cur_char + "' after number");
@@ -272,7 +272,7 @@ void LexicalAnalyzer::state_read_real()
     }
 }
 
-void LexicalAnalyzer::state_read_comparison()
+void LexicalAnalyzer::state_comparison()
 {
     if (cur_char == '=') {
         switch (buff[0]) {
@@ -310,91 +310,91 @@ void LexicalAnalyzer::state_read_comparison()
     }
 }
 
-void LexicalAnalyzer::state_read_string()
+void LexicalAnalyzer::state_string()
 {
     if (cur_char == '\\') {
-        transition(&LexicalAnalyzer::state_read_string_escape);
+        transition(&LexicalAnalyzer::state_escape);
     } else if (cur_char == '"') {
         push_lexeme(ltConstString);
         transition(&LexicalAnalyzer::state_after_operand);
     } else if (cur_char == '\0' || cur_char == '\n') {
         transition_error("unclosed string");
     } else {
-        transition_buff(&LexicalAnalyzer::state_read_string);
+        transition_buff(&LexicalAnalyzer::state_string);
     }
 }
 
-void LexicalAnalyzer::state_read_string_escape()
+void LexicalAnalyzer::state_escape()
 {
     if (cur_char == 'n') {
         buff += '\n';
-        transition(&LexicalAnalyzer::state_read_string);
+        transition(&LexicalAnalyzer::state_string);
     } else if (cur_char == '\0') {
         transition_error("unclosed string");
     } else {
-        transition_buff(&LexicalAnalyzer::state_read_string);
+        transition_buff(&LexicalAnalyzer::state_string);
     }
 }
 
-void LexicalAnalyzer::state_read_comment_start()
+void LexicalAnalyzer::state_comment_start()
 {
     if (cur_char == '*') {
         buff = "";
-        transition(&LexicalAnalyzer::state_read_comment);
+        transition(&LexicalAnalyzer::state_comment);
     } else {
         push_lexeme(ltDiv);
         transition_eps(&LexicalAnalyzer::state_start);
     }
 }
 
-void LexicalAnalyzer::state_read_comment_start_AO()
+void LexicalAnalyzer::state_comment_start_AO()
 {
     if (cur_char == '*') {
         buff = "";
-        transition(&LexicalAnalyzer::state_read_comment_AO);
+        transition(&LexicalAnalyzer::state_comment_AO);
     } else {
         push_lexeme(ltDiv);
         transition_eps(&LexicalAnalyzer::state_start);
     }
 }
 
-void LexicalAnalyzer::state_read_comment()
+void LexicalAnalyzer::state_comment()
 {
     if (cur_char == '\0') {
         transition_error("unclosed comment");
     } else if (cur_char == '*') {
-        transition(&LexicalAnalyzer::state_read_comment_end);
+        transition(&LexicalAnalyzer::state_comment_end);
     } else {
-        transition(&LexicalAnalyzer::state_read_comment);
+        transition(&LexicalAnalyzer::state_comment);
     }
 }
 
-void LexicalAnalyzer::state_read_comment_AO()
+void LexicalAnalyzer::state_comment_AO()
 {
     if (cur_char == '\0') {
         transition_error("unclosed comment");
     } else if (cur_char == '*') {
-        transition(&LexicalAnalyzer::state_read_comment_end_AO);
+        transition(&LexicalAnalyzer::state_comment_end_AO);
     } else {
-        transition(&LexicalAnalyzer::state_read_comment_AO);
+        transition(&LexicalAnalyzer::state_comment_AO);
     }
 }
 
-void LexicalAnalyzer::state_read_comment_end()
+void LexicalAnalyzer::state_comment_end()
 {
     if (cur_char == '/') {
         transition(&LexicalAnalyzer::state_start);
     } else {
-        transition_eps(&LexicalAnalyzer::state_read_comment);
+        transition_eps(&LexicalAnalyzer::state_comment);
     }
 }
 
-void LexicalAnalyzer::state_read_comment_end_AO()
+void LexicalAnalyzer::state_comment_end_AO()
 {
     if (cur_char == '/') {
         transition(&LexicalAnalyzer::state_after_operand);
     } else {
-        transition_eps(&LexicalAnalyzer::state_read_comment_AO);
+        transition_eps(&LexicalAnalyzer::state_comment_AO);
     }
 }
 

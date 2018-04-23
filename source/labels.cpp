@@ -20,6 +20,9 @@ void LabelInfo::propagate(ProgramNodes &program)
 {
     size_t length = node_indexes.size();
     if (length == 0) {
+        if (value != NULL) {
+            delete value;
+        }
         return;
     }
     if (value == NULL) {
