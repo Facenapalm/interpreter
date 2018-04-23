@@ -1,0 +1,37 @@
+program {
+    int seed, number, input, attempt;
+    string yn;
+    /* Linear congruential generator */
+    print("Enter seed for PRNG.");
+    read(seed);
+    /* make sure the seed is positive and will not lead to overflow */
+    if ((seed = seed % 32768) < 0) {
+        seed = -seed;
+    }
+    do {
+        seed = (seed * 1103515245 + 12345) / 65536 % 32768;
+        number = seed % 100;
+        attempt = 10;
+        while(attempt > 0) {
+            write("Attempts left: ", attempt);
+            write("Guess the number...");
+            read(input);
+            if (input == number) {
+                write("Correct!");
+                break;
+            }
+            if (input < number) {
+                write("Too low.");
+            } else {
+                write("Too high.");
+            }
+            attempt = attempt - 1;
+        }
+        if (attempt == 0) {
+            write("You lose. Try agains? [Y/N]");
+        } else {
+            write("You win. One more? [Y/N]");
+        }
+        read(yn);
+    } while(yn == "Y" or yn == "y");
+}
