@@ -1,0 +1,3 @@
+program {
+    while(1) write("Hello, world!");
+}

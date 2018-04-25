@@ -1,0 +1,3 @@
+program {
+    if (1 = 2) write("Hello, world!");
+}

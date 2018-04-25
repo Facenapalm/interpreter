@@ -1,0 +1,5 @@
+program {
+    int i = 1, j = 2;
+    i = (i + j + k) / 2;
+    write(i);
+}

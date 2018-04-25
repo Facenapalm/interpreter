@@ -1,0 +1,3 @@
+program {
+    int i = read();
+}

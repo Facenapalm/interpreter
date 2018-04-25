@@ -1,0 +1,2 @@
+program {
+    write("Hello, world!");

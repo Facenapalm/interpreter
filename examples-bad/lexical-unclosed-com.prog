@@ -1,0 +1,4 @@
+/* comment * /
+program {
+    write("Hello, world!");
+}

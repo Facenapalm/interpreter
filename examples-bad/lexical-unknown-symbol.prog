@@ -1,0 +1,4 @@
+program {
+    int переменная;
+    write("Hello, world!);
+}

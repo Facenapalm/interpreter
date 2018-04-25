@@ -1,0 +1,3 @@
+program {
+    int program = 10;
+}
