@@ -1,0 +1,92 @@
+digraph lexical {
+    rankdir=LR;
+    nodesep=0.5;
+    ranksep=0.7;
+
+    /* left margin */
+    M [style="invis"];
+    M -> STR [style="invis"];
+
+    I [label="identificator"];
+    ESC [label="escape*"];
+    STR [label="string*"];
+    { rank=same; I, ESC, STR }
+
+    CMP [label="comparison*"];
+    S [label="start*", style=filled];
+    AO [label="after operand"];
+    { rank=same; CMP, S, AO }
+
+    COMS [label="comment start"];
+    SIGN [label="sign"];
+    COMSAO [label="comment start AO"];
+    { rank=same; COMS, SIGN, COMSAO }
+    COMS -> SIGN -> COMSAO [style="invis"];
+
+    COM [label="comment*"];
+    INT [label="integer*"];
+    COMAO [label="comment AO*"];
+    { rank=same; COM, INT, COMAO }
+    COM -> INT -> COMAO [style="invis"];
+
+    COME [label="comment end"];
+    DOT [label="dot*"];
+    COMEAO [label="comment end AO"];
+    { rank=same; COME, DOT, COMEAO }
+    COME -> DOT -> COMEAO [style="invis"];
+
+    REAL [label="real*"];
+
+    /* same rank edges first */
+    CMP -> S [dir="both", color="gray:black", headlabel=<<i>= </i>>, taillabel=<<i>!=&lt;&gt; </i>>];
+    S -> AO [dir="both", color="black:gray", label=<<i>)</i>>];
+    ESC -> STR [label=<<i>{any char}             </i>>];
+    STR -> ESC [label=<<i>\</i>>];
+
+    S -> S [label=<<i>\s{}(,;*%                         </i>>];
+    S -> INT [label=<<i>0-9</i>>];
+    S -> I [label=<<i>A-Za-z</i>>];
+    S -> STR [label=<<i>"</i>>];
+    S -> SIGN [label=<<i>+-</i>>];
+    S -> COMS [label=<<i>/</i>>];
+
+    AO:sw -> AO:sw [label=<<i>\s</i>>];
+    AO -> COMSAO [label=<<i>/</i>>];
+
+    I -> I [label=<<i>0-9A-Za-z</i>>];
+    I -> AO [color=gray];
+    I -> S [color=gray];
+
+    SIGN -> INT [label=<<i>0-9</i>>];
+    SIGN -> S [color=gray];
+
+    INT -> INT [label=<<i>0-9</i>>];
+    INT -> DOT [label=<<i>.</i>>];
+    INT -> AO [color=gray];
+
+    DOT -> REAL [label=<<i>0-9</i>>];
+
+    REAL:e -> REAL:e [label=<<i> 0-9</i>>];
+    REAL -> AO [color=gray];
+
+    STR:sw -> STR [label=<<i>{any char}</i>>];
+    STR -> AO [label=<<i>"</i>>];
+
+    COMS -> S [color=gray];
+    COMS -> COM [label=<<i>*</i>>];
+
+    COM -> COM [label=<<i>{any char}</i>>];
+    COM -> COME [label=<<i>*</i>>];
+
+    COME -> S [label=<<i>/</i>>];
+    COME -> COM [color=gray];
+
+    COMSAO -> S [color=gray];
+    COMSAO -> COMAO [label=<<i>*</i>>];
+
+    COMAO -> COMAO [label=<<i>{any char}</i>>];
+    COMAO -> COMEAO [label=<<i>*</i>>];
+
+    COMEAO -> AO [label=<<i>/</i>>];
+    COMEAO -> COMAO [color=gray];
+}

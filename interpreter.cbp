@@ -22,8 +22,8 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-        <Unit filename="source/config.h" />
-        <Unit filename="source/exceptions.h" />
+		<Unit filename="source/config.h" />
+		<Unit filename="source/exceptions.h" />
 		<Unit filename="source/lexeme.cpp" />
 		<Unit filename="source/lexeme.h" />
 		<Unit filename="source/lexical.cpp" />
@@ -32,14 +32,14 @@
 		<Unit filename="source/values.h" />
 		<Unit filename="source/variables.cpp" />
 		<Unit filename="source/variables.h" />
-        <Unit filename="source/labels.cpp" />
-        <Unit filename="source/labels.h" />
+		<Unit filename="source/labels.cpp" />
+		<Unit filename="source/labels.h" />
 		<Unit filename="source/syntax.cpp" />
 		<Unit filename="source/syntax.h" />
-        <Unit filename="source/operations.cpp" />
-        <Unit filename="source/operations.h" />
-        <Unit filename="source/program.cpp" />
-        <Unit filename="source/program.h" />
+		<Unit filename="source/operations.cpp" />
+		<Unit filename="source/operations.h" />
+		<Unit filename="source/program.cpp" />
+		<Unit filename="source/program.h" />
 		<Unit filename="source/main.cpp" />
 		<Extensions>
 			<code_completion />
