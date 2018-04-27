@@ -66,7 +66,6 @@ void Program::execute(std::istream &in, std::ostream &out)
             left = pop();
             if (!left->to_boolean()) {
                 pos = right->to_integer();
-                stack.clear();
             }
             delete left;
             delete right;

@@ -119,6 +119,15 @@ static inline LexemeType get_separator_type(char ch)
 
 static inline LexemeType get_keyword_type(const std::string &str)
 {
+    #ifdef ALLOW_ALTERNATIVE_NAMES
+    if (str == "print") {
+        return ltWrite;
+    } else if (str == "str") {
+        return ltString;
+    } else if (str == "bool") {
+        return ltBoolean;
+    }
+    #endif // ALLOW_ALTERNATIVE_NAMES
     if (str == "program") {
         return ltProgram;
     } else if (str == "if") {
@@ -153,14 +162,6 @@ static inline LexemeType get_keyword_type(const std::string &str)
         return ltAnd;
     } else if (str == "or") {
         return ltOr;
-    #ifdef ALLOW_ALTERNATIVE_NAMES
-    } else if (str == "print") {
-        return ltWrite;
-    } else if (str == "str") {
-        return ltString;
-    } else if (str == "bool") {
-        return ltBoolean;
-    #endif // ALLOW_ALTERNATIVE_NAMES
     } else {
         return ltIdentificator;
     }

@@ -420,7 +420,18 @@ ValueInfo SyntaxAnalyzer::state_expression_or()
     ValueInfo cur, prev;
 
     cur = state_expression_and();
+    #ifdef LAZY_EVALUATION
+    LabelID exp_end = undefined_label;
+    if (cur_lexeme_type == ltOr) {
+        exp_end = labels.new_label();
+    }
+    #endif // LAZY_EVALUATION
     while (cur_lexeme_type == ltOr) {
+        #ifdef LAZY_EVALUATION
+        gen_operation(opDup);
+        gen_jump(exp_end, jtAtTrue);
+        #endif // LAZY_EVALUATION
+
         lexeme = cur_lexeme;
         get_next_lexeme();
         prev = cur;
@@ -433,6 +444,11 @@ ValueInfo SyntaxAnalyzer::state_expression_or()
 
         gen_operation(opBoolOr);
     }
+    #ifdef LAZY_EVALUATION
+    if (exp_end != undefined_label) {
+        gen_label(exp_end);
+    }
+    #endif // LAZY_EVALUATION
     return cur;
 }
 
@@ -442,7 +458,18 @@ ValueInfo SyntaxAnalyzer::state_expression_and()
     ValueInfo cur, prev;
 
     cur = state_expression_cmp();
+    #ifdef LAZY_EVALUATION
+    LabelID exp_end = undefined_label;
+    if (cur_lexeme_type == ltAnd) {
+        exp_end = labels.new_label();
+    }
+    #endif // LAZY_EVALUATION
     while (cur_lexeme_type == ltAnd) {
+        #ifdef LAZY_EVALUATION
+        gen_operation(opDup);
+        gen_jump(exp_end, jtAtFalse);
+        #endif // LAZY_EVALUATION
+
         lexeme = cur_lexeme;
         get_next_lexeme();
         prev = cur;
@@ -455,6 +482,11 @@ ValueInfo SyntaxAnalyzer::state_expression_and()
 
         gen_operation(opBoolAnd);
     }
+    #ifdef LAZY_EVALUATION
+    if (exp_end != undefined_label) {
+        gen_label(exp_end);
+    }
+    #endif // LAZY_EVALUATION
     return cur;
 }
 
@@ -572,13 +604,13 @@ ValueInfo SyntaxAnalyzer::state_expression_cmp()
             gen_operation(opBoolAnd);
         }
         first_cmp = false;
-        if (!is_comparer(cur_lexeme_type)) {
-            cur.type = vtBoolean;
-        }
         #else
         cur.type = vtBoolean;
         #endif // COMPARISON_CHAIN_SUPPORT
     }
+    #ifdef COMPARISON_CHAIN_SUPPORT
+    cur.type = vtBoolean;
+    #endif // COMPARISON_CHAIN_SUPPORT
     return cur;
 }
 

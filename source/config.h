@@ -9,4 +9,7 @@
 // (a > b > c) instead of (a > b and b > c)
 #define COMPARISON_CHAIN_SUPPORT
 
+// note that comparison chains are always greed
+// #define LAZY_EVALUATION
+
 #endif // CONFIG_H
