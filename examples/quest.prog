@@ -3,9 +3,9 @@
 program {
     int location = 1;
     int input;
-    bool input_correct;
-    bool win;
-    bool show_params = false;
+    boolean input_correct;
+    boolean win;
+    boolean show_params = false;
     /* string replacements */
     string
         Ranger = "ƒà¥ä",

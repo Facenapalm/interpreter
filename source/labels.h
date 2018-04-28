@@ -14,7 +14,7 @@ private:
     Value *value;
     std::vector<size_t> node_indexes;
 public:
-    LabelInfo(const std::string &name="<Anonymous>");
+    explicit LabelInfo(const std::string &name="<Anonymous>");
     void set_value(Value *value);
     void add_node(size_t idx);
     void propagate(ProgramNodes &program);

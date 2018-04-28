@@ -18,6 +18,10 @@ private:
         jtAtTrue,
         jtAtFalse
     };
+
+    bool comparison_chains;
+    bool lazy_evaluations;
+
     LexemeArray lexemes;
     size_t pos;
     Lexeme *cur_lexeme;
@@ -55,7 +59,7 @@ private:
     ValueInfo state_expression_un();
     ValueInfo state_operand();
 public:
-    SyntaxAnalyzer();
+    SyntaxAnalyzer(bool comparison_chains=false, bool lazy_evaluations=false);
     Program *parse(const LexemeArray &array);
 };
 

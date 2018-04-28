@@ -2,7 +2,7 @@ program {
     int seed, number, input, attempt;
     string yn;
     /* Linear congruential generator */
-    print("Enter seed for PRNG.");
+    write("Enter seed for PRNG.");
     read(seed);
     /* make sure the seed is positive and will not lead to overflow */
     if ((seed = seed % 32768) < 0) {

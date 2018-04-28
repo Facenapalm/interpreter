@@ -1,7 +1,7 @@
 program {
     int value;
     string result = "";
-    bool first_attempt = true;
+    boolean first_attempt = true;
     do {
         if (first_attempt) {
             write("Enter any positive number...");

@@ -5,7 +5,7 @@ void VariablesTable::clear()
     data.clear();
 }
 
-bool VariablesTable::register_name(std::string name, ValueType type)
+bool VariablesTable::register_name(const std::string &name, ValueType type)
 {
     if (get_number(name) != -1) {
         return false;
@@ -14,7 +14,7 @@ bool VariablesTable::register_name(std::string name, ValueType type)
     return true;
 }
 
-VariableID VariablesTable::get_number(std::string name) const
+VariableID VariablesTable::get_number(const std::string &name) const
 {
     for (auto i = data.begin(); i != data.end(); i++) {
         if (i->name == name) {

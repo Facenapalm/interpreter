@@ -31,8 +31,8 @@ class IntegerValue: public Value {
 private:
     Integer value;
 public:
-    IntegerValue(Integer value);
-    IntegerValue(const String &str);
+    explicit IntegerValue(Integer value);
+    explicit IntegerValue(const String &str);
     Value *clone() const override;
     ValueType get_type() const override;
     Integer to_integer() const override;
@@ -45,7 +45,7 @@ class StringValue: public Value {
 private:
     String value;
 public:
-    StringValue(const String &value);
+    explicit StringValue(const String &value);
     Value *clone() const override;
     ValueType get_type() const override;
     Integer to_integer() const override;
@@ -58,8 +58,8 @@ class BooleanValue: public Value {
 private:
     Boolean value;
 public:
-    BooleanValue(Boolean value);
-    BooleanValue(const String &str);
+    explicit BooleanValue(Boolean value);
+    explicit BooleanValue(const String &str);
     Value *clone() const override;
     ValueType get_type() const override;
     Integer to_integer() const override;
@@ -72,8 +72,8 @@ class RealValue: public Value {
 private:
     Real value;
 public:
-    RealValue(Real value);
-    RealValue(const String &str);
+    explicit RealValue(Real value);
+    explicit RealValue(const String &str);
     Value *clone() const override;
     ValueType get_type() const override;
     Integer to_integer() const override;

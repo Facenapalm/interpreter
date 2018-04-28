@@ -10,7 +10,12 @@ static bool dump_lexemes = false;
 static bool dump_rpn = false;
 static bool infinite = false;
 
-static void hr()
+static bool case_insensetive = false;
+static bool alternative_names = false;
+static bool comparison_chains = true;
+static bool lazy_evaluations = false;
+
+inline void hr()
 {
     std::cout << "----" << std::endl;
 }
@@ -20,11 +25,19 @@ void show_help()
     std::cout << "Usage:" << std::endl;
     std::cout << "interpreter [filename] [flags]" << std::endl;
     std::cout << "If no filename specified, the program will read console input " \
-        "until first empty line and then try to interpretate it. Available flags: ";
+        "until first empty line and then try to interpretate it. Available flags: " << std::endl;
+    std::cout << "--help         - display help" << std::endl;
     std::cout << "--dump-lexemes - display tokenized program" << std::endl;
     std::cout << "--dump-rpn     - display RPN representation of a program" << std::endl;
     std::cout << "--infinite     - interpretate program over and over again" << std::endl;
-    std::cout << "--help         - displays help" << std::endl;
+    std::cout << "--case-insensetive" << std::endl;
+    std::cout << "--case-sensetive [default]" << std::endl;
+    std::cout << "--lazy-evaluations" << std::endl;
+    std::cout << "--greed-evaluations [default]" << std::endl;
+    std::cout << "--allow-altnames - print instead of write etc" << std::endl;
+    std::cout << "--disallow-altnames [default]" << std::endl;
+    std::cout << "--allow-cmpchains - (3 > i > 1) etc [default]" << std::endl;
+    std::cout << "--disallow-cmpchains" << std::endl;
 }
 
 std::string read_program()
@@ -40,10 +53,10 @@ std::string read_program()
 
 void execute(std::istream &stream)
 {
-    LexicalAnalyzer lexical;
-    SyntaxAnalyzer syntax;
-    LexemeArray lexemes;
+    LexicalAnalyzer lexical(case_insensetive, alternative_names);
+    SyntaxAnalyzer syntax(comparison_chains, lazy_evaluations);
     Program *program = NULL;
+    LexemeArray lexemes;
 
     try {
         lexical.parse_stream(stream);
@@ -93,6 +106,22 @@ int main(int argc, char **argv)
                 dump_rpn = true;
             } else if (current == "--infinite") {
                 infinite = true;
+            } else if (current == "--case-insensetive") {
+                case_insensetive = true;
+            } else if (current == "--case-sensetive") {
+                case_insensetive = false;
+            } else if (current == "--allow-altnames") {
+                alternative_names = true;
+            } else if (current == "--disallow-altnames") {
+                alternative_names = false;
+            } else if (current == "--allow-cmpchains") {
+                comparison_chains = true;
+            } else if (current == "--disallow-cmpchains") {
+                comparison_chains = false;
+            } else if (current == "--lazy-evaluations") {
+                lazy_evaluations = true;
+            } else if (current == "--greed-evaluations") {
+                lazy_evaluations = false;
             } else {
                 if (i == 1) {
                     program_specified = true;

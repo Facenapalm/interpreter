@@ -7,19 +7,19 @@
 
 typedef Integer VariableID;
 
-struct VariableInfo {
-    VariableID number;
-    std::string name;
-    ValueType type;
-};
-
 class VariablesTable {
 private:
+    struct VariableInfo {
+        VariableID number;
+        std::string name;
+        ValueType type;
+    };
+
     std::vector<VariableInfo> data;
 public:
     void clear();
-    bool register_name(std::string name, ValueType type);
-    VariableID get_number(std::string name) const;
+    bool register_name(const std::string &name, ValueType type);
+    VariableID get_number(const std::string &name) const;
     ValueType get_type(VariableID number) const;
     VariableID size() const;
 };

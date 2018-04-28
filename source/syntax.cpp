@@ -1,5 +1,4 @@
 #include <sstream>
-#include "config.h"
 #include "exceptions.h"
 #include "syntax.h"
 
@@ -51,7 +50,9 @@ static inline std::string value_type_to_string(ValueType type)
     }
 }
 
-SyntaxAnalyzer::SyntaxAnalyzer() {}
+SyntaxAnalyzer::SyntaxAnalyzer(bool comparison_chains, bool lazy_evaluations):
+    comparison_chains(comparison_chains), lazy_evaluations(lazy_evaluations),
+    pos(0), cur_lexeme(NULL), cur_lexeme_type(ltNone) {}
 
 void SyntaxAnalyzer::get_next_lexeme()
 {
@@ -175,9 +176,9 @@ void SyntaxAnalyzer::gen_jump(LabelID label, JumpType type)
 
 void SyntaxAnalyzer::state_program()
 {
-    #ifdef COMPARISON_CHAIN_SUPPORT
-    variables.register_name("", vtNone); // 0th temp variable
-    #endif // COMPARISON_CHAIN_SUPPORT
+    if (comparison_chains) {
+        variables.register_name("", vtNone); // 0th temp variable
+    }
     check_lexeme(ltProgram, "program should starts with 'program' keyword");
     check_lexeme(ltBlockOpen, "expected '{'");
     state_descriptions();
@@ -418,19 +419,17 @@ ValueInfo SyntaxAnalyzer::state_expression_or()
 {
     Lexeme *lexeme;
     ValueInfo cur, prev;
+    LabelID exp_end = undefined_label;
 
     cur = state_expression_and();
-    #ifdef LAZY_EVALUATION
-    LabelID exp_end = undefined_label;
-    if (cur_lexeme_type == ltOr) {
+    if (lazy_evaluations && cur_lexeme_type == ltOr) {
         exp_end = labels.new_label();
     }
-    #endif // LAZY_EVALUATION
     while (cur_lexeme_type == ltOr) {
-        #ifdef LAZY_EVALUATION
-        gen_operation(opDup);
-        gen_jump(exp_end, jtAtTrue);
-        #endif // LAZY_EVALUATION
+        if (lazy_evaluations) {
+            gen_operation(opDup);
+            gen_jump(exp_end, jtAtTrue);
+        }
 
         lexeme = cur_lexeme;
         get_next_lexeme();
@@ -444,11 +443,9 @@ ValueInfo SyntaxAnalyzer::state_expression_or()
 
         gen_operation(opBoolOr);
     }
-    #ifdef LAZY_EVALUATION
     if (exp_end != undefined_label) {
         gen_label(exp_end);
     }
-    #endif // LAZY_EVALUATION
     return cur;
 }
 
@@ -456,19 +453,17 @@ ValueInfo SyntaxAnalyzer::state_expression_and()
 {
     Lexeme *lexeme;
     ValueInfo cur, prev;
+    LabelID exp_end = undefined_label;
 
     cur = state_expression_cmp();
-    #ifdef LAZY_EVALUATION
-    LabelID exp_end = undefined_label;
-    if (cur_lexeme_type == ltAnd) {
+    if (lazy_evaluations && cur_lexeme_type == ltAnd) {
         exp_end = labels.new_label();
     }
-    #endif // LAZY_EVALUATION
     while (cur_lexeme_type == ltAnd) {
-        #ifdef LAZY_EVALUATION
-        gen_operation(opDup);
-        gen_jump(exp_end, jtAtFalse);
-        #endif // LAZY_EVALUATION
+        if (lazy_evaluations) {
+            gen_operation(opDup);
+            gen_jump(exp_end, jtAtFalse);
+        }
 
         lexeme = cur_lexeme;
         get_next_lexeme();
@@ -482,11 +477,9 @@ ValueInfo SyntaxAnalyzer::state_expression_and()
 
         gen_operation(opBoolAnd);
     }
-    #ifdef LAZY_EVALUATION
     if (exp_end != undefined_label) {
         gen_label(exp_end);
     }
-    #endif // LAZY_EVALUATION
     return cur;
 }
 
@@ -499,19 +492,15 @@ ValueInfo SyntaxAnalyzer::state_expression_cmp()
 {
     Lexeme *lexeme;
     ValueInfo cur, prev;
-    #ifdef COMPARISON_CHAIN_SUPPORT
     bool first_cmp = true;
-    #endif // COMPARISON_CHAIN_SUPPORT
 
     cur = state_expression_sum();
     while (is_comparer(cur_lexeme_type)) {
-        #ifdef COMPARISON_CHAIN_SUPPORT
-        if (!first_cmp) {
+        if (comparison_chains && !first_cmp) {
             // load previous constant
             gen_constant(0);
             gen_operation(opLoadVariable);
         }
-        #endif // COMPARISON_CHAIN_SUPPORT
 
         lexeme = cur_lexeme;
         get_next_lexeme();
@@ -519,13 +508,11 @@ ValueInfo SyntaxAnalyzer::state_expression_cmp()
         cur = state_expression_sum();
         cur.is_var = false;
 
-        #ifdef COMPARISON_CHAIN_SUPPORT
-        if (is_comparer(cur_lexeme_type)) {
+        if (comparison_chains && is_comparer(cur_lexeme_type)) {
             // save constant for next comparison
             gen_constant(0);
             gen_operation(opSaveVariable);
         }
-        #endif // COMPARISON_CHAIN_SUPPORT
 
         if (cur.type == vtString && prev.type == vtString) {
             switch (lexeme->get_type()) {
@@ -599,20 +586,18 @@ ValueInfo SyntaxAnalyzer::state_expression_cmp()
             }
         }
 
-        #ifdef COMPARISON_CHAIN_SUPPORT
+        if (!comparison_chains) {
+            cur.type = vtBoolean;
+            continue;
+        }
         if (!first_cmp) {
             gen_operation(opBoolAnd);
         }
         first_cmp = false;
-        #else
-        cur.type = vtBoolean;
-        #endif // COMPARISON_CHAIN_SUPPORT
     }
-    #ifdef COMPARISON_CHAIN_SUPPORT
-    if (!first_cmp) {
+    if (comparison_chains && !first_cmp) {
         cur.type = vtBoolean;
     }
-    #endif // COMPARISON_CHAIN_SUPPORT
     return cur;
 }
 

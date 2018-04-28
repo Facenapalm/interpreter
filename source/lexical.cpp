@@ -2,10 +2,12 @@
 #include "exceptions.h"
 #include "lexical.h"
 
-LexicalAnalyzer::LexicalAnalyzer()
+LexicalAnalyzer::LexicalAnalyzer(bool case_insensetive, bool alternative_names):
+    case_insensetive(case_insensetive), alternative_names(alternative_names),
+    ready(false), state(NULL), lexeme_line(0), lexeme_column(0),
+    input(NULL), cur_char('\0'), line(0), column(0)
 {
     buff.reserve(256);
-    ready = false;
 }
 
 void LexicalAnalyzer::get_next_char()
@@ -13,14 +15,13 @@ void LexicalAnalyzer::get_next_char()
     if (!(*input >> std::noskipws >> cur_char)) {
         cur_char = '\0';
     }
-    #ifdef CASE_INSENSETIVE
-    if (state != &LexicalAnalyzer::state_string &&
+    if (case_insensetive &&
+        state != &LexicalAnalyzer::state_string &&
         state != &LexicalAnalyzer::state_escape &&
         cur_char >= 'A' && cur_char <= 'Z') {
         cur_char -= 'A';
         cur_char += 'a';
     }
-    #endif // CASE_INSENSETIVE
     if (cur_char == '\n') {
         line += 1;
         column = 0;
@@ -99,9 +100,9 @@ static inline bool is_digit(char ch)
     return ch >= '0' && ch <= '9';
 }
 
-static inline LexemeType get_separator_type(char ch)
+inline LexemeType LexicalAnalyzer::get_separator_type()
 {
-    switch (ch) {
+    switch (cur_char) {
     case ',':
         return ltComma;
     case '{':
@@ -117,50 +118,50 @@ static inline LexemeType get_separator_type(char ch)
     }
 }
 
-static inline LexemeType get_keyword_type(const std::string &str)
+inline LexemeType LexicalAnalyzer::get_keyword_type()
 {
-    #ifdef ALLOW_ALTERNATIVE_NAMES
-    if (str == "print") {
-        return ltWrite;
-    } else if (str == "str") {
-        return ltString;
-    } else if (str == "bool") {
-        return ltBoolean;
+    if (alternative_names) {
+        if (buff == "print") {
+            return ltWrite;
+        } else if (buff == "str") {
+            return ltString;
+        } else if (buff == "bool") {
+            return ltBoolean;
+        }
     }
-    #endif // ALLOW_ALTERNATIVE_NAMES
-    if (str == "program") {
+    if (buff == "program") {
         return ltProgram;
-    } else if (str == "if") {
+    } else if (buff == "if") {
         return ltIf;
-    } else if (str == "else") {
+    } else if (buff == "else") {
         return ltElse;
-    } else if (str == "while") {
+    } else if (buff == "while") {
         return ltWhile;
-    } else if (str == "read") {
+    } else if (buff == "read") {
         return ltRead;
-    } else if (str == "write") {
+    } else if (buff == "write") {
         return ltWrite;
-    } else if (str == "do") {
+    } else if (buff == "do") {
         return ltDo;
-    } else if (str == "break") {
+    } else if (buff == "break") {
         return ltBreak;
-    } else if (str == "continue") {
+    } else if (buff == "continue") {
         return ltContinue;
-    } else if (str == "int") {
+    } else if (buff == "int") {
         return ltInt;
-    } else if (str == "string") {
+    } else if (buff == "string") {
         return ltString;
-    } else if (str == "boolean") {
+    } else if (buff == "boolean") {
         return ltBoolean;
-    } else if (str == "real") {
+    } else if (buff == "real") {
         return ltReal;
-    } else if (str == "true" || str == "false") {
+    } else if (buff == "true" || buff == "false") {
         return ltConstBoolean;
-    } else if (str == "not") {
+    } else if (buff == "not") {
         return ltNot;
-    } else if (str == "and") {
+    } else if (buff == "and") {
         return ltAnd;
-    } else if (str == "or") {
+    } else if (buff == "or") {
         return ltOr;
     } else {
         return ltIdentificator;
@@ -181,7 +182,7 @@ void LexicalAnalyzer::state_start()
         transition(&LexicalAnalyzer::state_string);
     } else if (cur_char == '{' || cur_char == '}' || cur_char == '(' ||
                cur_char == ',' || cur_char == ';') {
-        transition_push(&LexicalAnalyzer::state_start, get_separator_type(cur_char));
+        transition_push(&LexicalAnalyzer::state_start, get_separator_type());
     } else if (cur_char == ')') {
         transition_push(&LexicalAnalyzer::state_after_operand, ltBracketClose);
     } else if (cur_char == '+' || cur_char == '-') {
@@ -221,7 +222,7 @@ void LexicalAnalyzer::state_identificator()
     if (is_letter(cur_char) || is_digit(cur_char)) {
         transition_buff(&LexicalAnalyzer::state_identificator);
     } else {
-        LexemeType type = get_keyword_type(buff);
+        LexemeType type = get_keyword_type();
         transition_push_eps(type == ltIdentificator ?
                             &LexicalAnalyzer::state_after_operand :
                             &LexicalAnalyzer::state_start, type);

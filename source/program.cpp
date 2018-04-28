@@ -2,7 +2,8 @@
 #include "exceptions.h"
 #include "program.h"
 
-Program::Program(const std::vector<ProgramNode> &program, VariableID variables_count): program(program)
+Program::Program(const std::vector<ProgramNode> &program, VariableID variables_count):
+    program(program), pos(0)
 {
     variables.resize(variables_count);
 }
