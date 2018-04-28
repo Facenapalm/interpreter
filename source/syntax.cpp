@@ -51,7 +51,7 @@ static inline std::string value_type_to_string(ValueType type)
     }
 }
 
-SyntaxAnalyzer::SyntaxAnalyzer(): ready(false) {}
+SyntaxAnalyzer::SyntaxAnalyzer() {}
 
 void SyntaxAnalyzer::get_next_lexeme()
 {
@@ -609,7 +609,9 @@ ValueInfo SyntaxAnalyzer::state_expression_cmp()
         #endif // COMPARISON_CHAIN_SUPPORT
     }
     #ifdef COMPARISON_CHAIN_SUPPORT
-    cur.type = vtBoolean;
+    if (!first_cmp) {
+        cur.type = vtBoolean;
+    }
     #endif // COMPARISON_CHAIN_SUPPORT
     return cur;
 }
@@ -783,7 +785,7 @@ ValueInfo SyntaxAnalyzer::state_operand()
     return result;
 }
 
-void SyntaxAnalyzer::parse_array(const LexemeArray &array)
+Program *SyntaxAnalyzer::parse(const LexemeArray &array)
 {
     lexemes = array;
     pos = 0;
@@ -792,17 +794,7 @@ void SyntaxAnalyzer::parse_array(const LexemeArray &array)
     program.clear();
     variables.clear();
     labels.clear();
-    ready = false;
 
     state_program();
-    ready = true;
-}
-
-Program *SyntaxAnalyzer::get_program()
-{
-    if (ready) {
-        return new Program(program, variables.size());
-    } else {
-        throw std::runtime_error("Program is not ready");
-    }
+    return new Program(program, variables.size());
 }

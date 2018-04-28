@@ -43,7 +43,7 @@ void execute(std::istream &stream)
     LexicalAnalyzer lexical;
     SyntaxAnalyzer syntax;
     LexemeArray lexemes;
-    Program *program;
+    Program *program = NULL;
 
     try {
         lexical.parse_stream(stream);
@@ -56,8 +56,7 @@ void execute(std::istream &stream)
             }
             hr();
         }
-        syntax.parse_array(lexemes);
-        program = syntax.get_program();
+        program = syntax.parse(lexemes);
         if (dump_rpn) {
             program->print(std::cout);
             hr();
@@ -69,6 +68,9 @@ void execute(std::istream &stream)
         }
         delete program;
     } catch (const Exception &e) {
+        if (program) {
+            delete program;
+        }
         std::cout << e.what() << std::endl;
     }
 }

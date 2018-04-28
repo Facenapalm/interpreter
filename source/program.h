@@ -30,7 +30,8 @@ private:
     std::vector<Value *> stack;
     size_t pos;
 
-    void clear();
+    void clear_variables();
+    void clear_stack();
 
     inline void push(Value *value);
     inline Value *top();

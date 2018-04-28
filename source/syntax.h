@@ -26,7 +26,6 @@ private:
     ProgramNodes program;
     VariablesTable variables;
     LabelsTable labels;
-    bool ready;
 
     void get_next_lexeme();
     void check_lexeme(LexemeType lexeme, const std::string &error_message);
@@ -57,8 +56,7 @@ private:
     ValueInfo state_operand();
 public:
     SyntaxAnalyzer();
-    void parse_array(const LexemeArray &array);
-    Program *get_program();
+    Program *parse(const LexemeArray &array);
 };
 
 #endif // SYNTAX_H
