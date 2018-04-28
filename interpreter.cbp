@@ -22,7 +22,6 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
-		<Unit filename="source/config.h" />
 		<Unit filename="source/exceptions.h" />
 		<Unit filename="source/lexeme.cpp" />
 		<Unit filename="source/lexeme.h" />
