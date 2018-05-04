@@ -1,4 +1,4 @@
-program → `program` `{` descriptions operands `}`
+program → `program` `{` descriptions operators `}`
 descriptions → { type description `;` }
 type → `int` | `string` | `bool` | `real`
 description → variable { `,` variable }

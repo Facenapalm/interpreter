@@ -74,9 +74,9 @@ Value *operation_execute(Operation op, Value *left, Value *right)
     case opStrNotEq:
         return new BooleanValue(left->to_string() != right->to_string());
     case opBoolAnd:
-        return new BooleanValue(left->to_boolean() and right->to_boolean());
+        return new BooleanValue(left->to_boolean() && right->to_boolean());
     case opBoolOr:
-        return new BooleanValue(left->to_boolean() or right->to_boolean());
+        return new BooleanValue(left->to_boolean() || right->to_boolean());
     case opRealPlus:
         return new RealValue(left->to_real() + right->to_real());
     case opRealMinus:
@@ -99,5 +99,5 @@ Value *operation_execute(Operation op, Value *left, Value *right)
         return new BooleanValue(left->to_real() != right->to_real());
     default:
         throw std::runtime_error("Unknown binary operation");
-    };
+    }
 }

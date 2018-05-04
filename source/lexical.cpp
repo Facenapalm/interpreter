@@ -400,7 +400,6 @@ void LexicalAnalyzer::state_comment_end_AO()
     }
 }
 
-
 void LexicalAnalyzer::process()
 {
     ready = false;
@@ -419,6 +418,7 @@ void LexicalAnalyzer::parse_stream(std::istream &stream)
 {
     input = &stream;
     process();
+    input = NULL;
 }
 
 void LexicalAnalyzer::parse_string(const std::string &str)

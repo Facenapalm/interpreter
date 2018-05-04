@@ -12,7 +12,7 @@ program {
         seed = (seed * 1103515245 + 12345) / 65536 % 32768;
         number = seed % 100;
         attempt = 10;
-        while(attempt > 0) {
+        while (attempt > 0) {
             write("Attempts left: ", attempt);
             write("Guess the number...");
             read(input);
@@ -33,5 +33,5 @@ program {
             write("You win. One more? [Y/N]");
         }
         read(yn);
-    } while(yn == "Y" or yn == "y");
+    } while (yn == "Y" or yn == "y");
 }
